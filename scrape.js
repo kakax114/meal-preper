@@ -20,10 +20,16 @@ const path  = require('path');
 // ── Config ──────────────────────────────────────────────────────
 const API_BASE   = 'https://gw.hellofresh.com/api';
 const IMG_BASE   = 'https://img.hellofresh.com/hellofresh_s3/image/upload';
-const FETCH_DELAY = 1500;  // ms between recipe fetches
-const IMG_DELAY   = 700;   // ms between image downloads
-const DETAIL_DIR  = path.join(__dirname, 'detail-cache');
-const ERROR_LOG   = path.join(__dirname, 'scrape-errors.log');
+const DETAIL_DIR = path.join(__dirname, 'detail-cache');
+const ERROR_LOG  = path.join(__dirname, 'scrape-errors.log');
+
+// Delay ranges (ms) — actual wait = random value in [min, max]
+const FETCH_DELAY = { min: 1800, max: 4200 };  // between recipe API calls
+const IMG_DELAY   = { min:  500, max: 1500 };  // between image downloads
+
+// Every COOLDOWN_EVERY recipes, pause for a longer break
+const COOLDOWN_EVERY = 40;
+const COOLDOWN_MS    = { min: 25_000, max: 55_000 };  // ~30–55 s
 
 // ── ANSI colours ─────────────────────────────────────────────────
 const C = {
@@ -101,7 +107,9 @@ function hfetch(targetUrl, headers = {}) {
   });
 }
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep  = ms => new Promise(r => setTimeout(r, ms));
+/** Sleep a random duration in [range.min, range.max] ms. */
+const jitter = range => sleep(Math.floor(Math.random() * (range.max - range.min + 1)) + range.min);
 
 // ── Bearer token ─────────────────────────────────────────────────
 let _token = null;
@@ -298,9 +306,19 @@ async function main() {
     const { url, id } = toFetch[i];
     const prefix = `[${String(i + 1).padStart(indexWidth)}/${toFetch.length}]`;
 
+    // ── Cooldown every N recipes ─────────────────────────────────
+    if (i > 0 && i % COOLDOWN_EVERY === 0) {
+      const ms = Math.floor(Math.random() * (COOLDOWN_MS.max - COOLDOWN_MS.min + 1)) + COOLDOWN_MS.min;
+      stopSpinner();
+      console.log(`${C.dim}${'·'.repeat(64)}  cooldown ${(ms/1000).toFixed(0)}s…${C.reset}`);
+      await sleep(ms);
+    }
+
     // ── Fetch detail ─────────────────────────────────────────────
+    const fetchWait = Math.floor(Math.random() * (FETCH_DELAY.max - FETCH_DELAY.min + 1)) + FETCH_DELAY.min;
+    startSpinner(prefix, `waiting ${(fetchWait/1000).toFixed(1)}s…`);
+    await sleep(fetchWait);
     startSpinner(prefix, `fetching ${id}`);
-    await sleep(FETCH_DELAY);
 
     let detail;
     try {
@@ -322,7 +340,7 @@ async function main() {
 
     async function dlImg(imgSrc) {
       if (!imgSrc) return '';
-      await sleep(IMG_DELAY);
+      await jitter(IMG_DELAY);
       const b64 = await fetchImgB64(imgSrc);
       if (b64) { imgOk++; return b64; }
       imgFail++;
