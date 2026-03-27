@@ -1,108 +1,85 @@
 'use strict';
 
+/**
+ * scrape.js — URL-list-driven HelloFresh recipe scraper
+ *
+ * Usage:
+ *   node scrape.js [url-list-file]
+ *
+ * Default file: hellofresh-recipe-urls-1774641958967.txt
+ * Expects one full HelloFresh recipe URL per line, e.g.:
+ *   https://www.hellofresh.com/recipes/pecan-crusted-chicken-6203c3d357b8e37e4638262a
+ *
+ * Requires the local server to be running first:
+ *   node server.js
+ */
+
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 
 // ── Config ──────────────────────────────────────────────────────
 const SERVER     = 'http://localhost:3456';
-const TARGET     = 1000;
-const DELAY_MS   = 2500;   // between image downloads
-const BATCH_DELAY= 4000;   // between recipe list fetches
-const DETAIL_DIR = path.join(__dirname, 'detail-cache');
-const LOG_SIZE   = 8;      // skip log lines shown
+const FETCH_DELAY = 1500;   // ms between recipe detail fetches
+const IMG_DELAY   = 700;    // ms between image downloads
+const DETAIL_DIR  = path.join(__dirname, 'detail-cache');
+const ERROR_LOG   = path.join(__dirname, 'scrape-errors.log');
 
-const CATEGORIES = [
-  'American','Italian','Mexican','Asian','Mediterranean',
-  'Indian','Chinese','Japanese','Korean','Thai',
-  'French','Spanish','Vietnamese','Middle Eastern','African',
-  'Cuban','Latin American','Hawaiian','Cajun','Greek',
-  'Turkish','Moroccan','Portuguese','Russian','Jamaican',
-  'British','German','Swedish','Lebanese','Peruvian',
-];
+// ── ANSI colours ─────────────────────────────────────────────────
+const C = {
+  reset  : '\x1b[0m',
+  bold   : '\x1b[1m',
+  dim    : '\x1b[2m',
+  green  : '\x1b[32m',
+  red    : '\x1b[31m',
+  yellow : '\x1b[33m',
+  cyan   : '\x1b[36m',
+  gray   : '\x1b[90m',
+};
 
-// ── State ────────────────────────────────────────────────────────
-let pass = 0, fail = 0, cached = 0, dup = 0;
-let statusMsg = 'Initializing…';
-const seenIds = new Set();
-const startTime = Date.now();
-let displayReady = false;
-const skipLog = [];   // circular log of recent skip events
-
-// ── Terminal helpers ─────────────────────────────────────────────
-const W = 56;
-// 9 status lines + 1 header + LOG_SIZE log lines + 1 bottom div = 9 + 2 + LOG_SIZE
-const NLINES = 11 + LOG_SIZE;
-
+// ── Helpers ───────────────────────────────────────────────────────
 function fmt(ms) {
   const s = Math.floor(ms / 1000);
   const m = Math.floor(s / 60);
   const h = Math.floor(m / 60);
-  if (h > 0) return `${h}h ${m % 60}m ${s % 60}s`;
+  if (h > 0) return `${h}h ${m % 60}m`;
   if (m > 0) return `${m}m ${s % 60}s`;
   return `${s}s`;
 }
 
-function bar(pct, width = 26) {
-  const f = Math.round(Math.min(pct, 1) * width);
-  return '[' + '█'.repeat(f) + '░'.repeat(width - f) + ']';
+/** Left-pad a number to a given width. */
+function rpad(n, width) {
+  return String(n).padStart(width, ' ');
 }
 
-function pad(str, len) {
-  str = String(str);
-  return str.length >= len ? str.slice(0, len) : str + ' '.repeat(len - str.length);
+/** Truncate / right-pad a string to a fixed display width. */
+function col(str, len) {
+  str = String(str || '');
+  return str.length > len ? str.slice(0, len - 1) + '…' : str.padEnd(len, ' ');
 }
 
-function logSkip(reason, name) {
-  const label = reason === 'id'   ? 'cached-id  '
-              : reason === 'name' ? 'dup-name   '
-              :                     'unknown    ';
-  skipLog.unshift(`  [${label}] ${name.slice(0, W - 16)}`);
-  if (skipLog.length > LOG_SIZE) skipLog.pop();
+/** Extract the 24-char hex recipe ID from a HelloFresh recipe URL. */
+function extractId(url) {
+  const m = url.match(/([a-f0-9]{24})(?:[/?#].*)?$/i);
+  return m ? m[1] : null;
 }
 
-function render() {
-  const pct     = Math.min((cached + pass) / TARGET, 1);
-  const elapsed = Date.now() - startTime;
-  const eta     = pass > 0 ? (elapsed / pass) * (TARGET - cached - pass) : 0;
-  const div     = '─'.repeat(W);
-
-  // Pad log to fixed height so cursor math stays correct
-  const logLines = [...skipLog];
-  while (logLines.length < LOG_SIZE) logLines.push('');
-
-  const lines = [
-    div,
-    `  My Cookbook — Recipe Scraper`,
-    div,
-    `  ${bar(pct)} ${String(Math.round(pct * 100)).padStart(3)}%`,
-    `  Total : ${cached + pass} / ${TARGET}   (${TARGET - cached - pass} remaining)`,
-    `  New: ${pass}   Cached: ${cached}   Fail: ${fail}   Dup: ${dup}`,
-    `  Elapsed: ${fmt(elapsed)}   ETA: ${pass > 5 ? fmt(eta) : '—'}`,
-    `  ${pad(statusMsg, W - 2)}`,
-    div,
-    `  Recent skips:`,
-    ...logLines.map(l => pad(l, W)),
-    div,
-  ];
-
-  if (displayReady) process.stdout.write(`\x1B[${NLINES}A\r`);
-  process.stdout.write(lines.join('\n') + '\n');
-  displayReady = true;
-}
-
-// ── HTTP helper ──────────────────────────────────────────────────
+// ── HTTP helpers ──────────────────────────────────────────────────
 function get(urlStr) {
   return new Promise((resolve, reject) => {
     const req = http.get(urlStr, res => {
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => {
-        try { resolve(JSON.parse(Buffer.concat(chunks).toString())); }
-        catch (e) { reject(new Error('JSON parse error')); }
+        const text = Buffer.concat(chunks).toString();
+        try {
+          resolve({ status: res.statusCode, data: JSON.parse(text) });
+        } catch {
+          reject(new Error(`JSON parse error (HTTP ${res.statusCode})`));
+        }
       });
     });
-    req.setTimeout(30000, () => { req.destroy(); reject(new Error('timeout')); });
+    req.setTimeout(30_000, () => { req.destroy(); reject(new Error('timeout after 30s')); });
     req.on('error', reject);
   });
 }
@@ -112,134 +89,202 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function fetchB64(imgUrl) {
   if (!imgUrl) return '';
   try {
-    const d = await get(`${SERVER}/api/img?url=${encodeURIComponent(imgUrl)}`);
-    return d.dataUrl || '';
-  } catch { return ''; }
+    const r = await get(`${SERVER}/api/img?url=${encodeURIComponent(imgUrl)}`);
+    return r.data?.dataUrl || '';
+  } catch {
+    return '';
+  }
 }
 
-// ── Main ─────────────────────────────────────────────────────────
+// ── Logging helpers ───────────────────────────────────────────────
+
+/** Clear the current terminal line (used to wipe the spinner). */
+function clearLine() {
+  process.stdout.write('\r\x1b[K');
+}
+
+let _spinnerTimer = null;
+const SPINNER = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+let _spinnerIdx = 0;
+
+function startSpinner(prefix, label) {
+  clearLine();
+  _spinnerIdx = 0;
+  _spinnerTimer = setInterval(() => {
+    process.stdout.write(`\r${prefix} ${C.cyan}${SPINNER[_spinnerIdx % SPINNER.length]}${C.reset} ${C.dim}${label}${C.reset}`);
+    _spinnerIdx++;
+  }, 80);
+}
+
+function stopSpinner() {
+  if (_spinnerTimer) { clearInterval(_spinnerTimer); _spinnerTimer = null; }
+  clearLine();
+}
+
+// ── Main ──────────────────────────────────────────────────────────
 async function main() {
-  if (!fs.existsSync(DETAIL_DIR)) fs.mkdirSync(DETAIL_DIR);
+  // ── 1. Load URL file ────────────────────────────────────────────
+  const urlFile = process.argv[2] || 'hellofresh-recipe-urls-1774641958967.txt';
+  const urlFilePath = path.resolve(urlFile);
 
-  // Resume: load already-scraped IDs and names from detail-cache
-  const seenNames = new Set();
-  fs.readdirSync(DETAIL_DIR).filter(f => f.endsWith('.json')).forEach(f => {
-    const id = f.replace('.json', '');
-    seenIds.add(id);
+  if (!fs.existsSync(urlFilePath)) {
+    console.error(`${C.red}Error: URL file not found → ${urlFilePath}${C.reset}`);
+    process.exit(1);
+  }
+
+  const rawLines = fs.readFileSync(urlFilePath, 'utf8')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.startsWith('https://www.hellofresh.com/recipes/'));
+
+  // Deduplicate URLs
+  const allUrls = [...new Set(rawLines)];
+
+  // ── 2. Categorise URLs before we start ─────────────────────────
+  if (!fs.existsSync(DETAIL_DIR)) fs.mkdirSync(DETAIL_DIR, { recursive: true });
+
+  const cachedIds = new Set(
+    fs.readdirSync(DETAIL_DIR)
+      .filter(f => f.endsWith('.json'))
+      .map(f => f.replace('.json', ''))
+  );
+
+  const badUrls    = [];   // can't extract ID
+  const toSkip     = [];   // already in cache
+  const toFetch    = [];   // need to scrape
+
+  for (const url of allUrls) {
+    const id = extractId(url);
+    if (!id)              { badUrls.push(url); continue; }
+    if (cachedIds.has(id)){ toSkip.push({ url, id }); continue; }
+    toFetch.push({ url, id });
+  }
+
+  // ── 3. Print plan ───────────────────────────────────────────────
+  const divider = '─'.repeat(64);
+  console.log(`\n${C.bold}  Recipe Scraper — URL-list mode${C.reset}`);
+  console.log(divider);
+  console.log(`  File    : ${urlFile}`);
+  console.log(`  Total   : ${allUrls.length} unique URLs`);
+  console.log(`  ${C.green}To fetch${C.reset} : ${toFetch.length}`);
+  console.log(`  ${C.dim}Cached${C.reset}   : ${toSkip.length}  (already in detail-cache, will skip)`);
+  if (badUrls.length)
+    console.log(`  ${C.yellow}Bad URLs${C.reset} : ${badUrls.length}  (cannot extract recipe ID)`);
+  console.log(`  Server  : ${SERVER}`);
+  console.log(divider + '\n');
+
+  if (badUrls.length) {
+    console.log(`${C.yellow}⚠ Bad URLs (no recipe ID found):${C.reset}`);
+    for (const u of badUrls) console.log(`  ${C.dim}${u}${C.reset}`);
+    console.log();
+    fs.appendFileSync(ERROR_LOG, badUrls.map(u => `[BAD-URL] ${u}`).join('\n') + '\n');
+  }
+
+  if (toFetch.length === 0) {
+    console.log(`${C.green}Nothing to do — all URLs already cached.${C.reset}\n`);
+    return;
+  }
+
+  // ── 4. Scrape loop ──────────────────────────────────────────────
+  let saved = 0, failed = 0;
+  const startTime  = Date.now();
+  const indexWidth = String(toFetch.length).length;
+
+  for (let i = 0; i < toFetch.length; i++) {
+    const { url, id } = toFetch[i];
+    const prefix = `[${rpad(i + 1, indexWidth)}/${toFetch.length}]`;
+
+    // ── Fetch detail ─────────────────────────────────────────────
+    startSpinner(prefix, `fetching ${id}`);
+    await sleep(FETCH_DELAY);
+
+    let detail;
     try {
-      const d = JSON.parse(fs.readFileSync(path.join(DETAIL_DIR, f), 'utf8'));
-      if (d.name) seenNames.add(d.name.trim().toLowerCase());
-    } catch {}
-  });
-  cached = seenIds.size;
-  render();
-
-  outer:
-  for (const cuisine of CATEGORIES) {
-    let page = 0;
-
-    while (true) {
-      if (cached + pass >= TARGET) break outer;
-
-      statusMsg = `Fetching ${cuisine} (page ${page + 1})…`;
-      render();
-
-      let items;
-      try {
-        const enc  = encodeURIComponent(cuisine);
-        const data = await get(`${SERVER}/api/recipes?cuisine=${enc}&page=${page}`);
-        items = data.items || [];
-      } catch (err) {
-        fail++;
-        const errLine = `[LIST-FAIL] ${cuisine} page ${page} — ${err.message}`;
-        statusMsg = errLine.slice(0, W - 2);
-        fs.appendFileSync(path.join(__dirname, 'scrape-errors.log'), errLine + '\n');
-        render();
-        await sleep(BATCH_DELAY * 2);
-        break; // next cuisine
+      const r = await get(`${SERVER}/api/recipe/${id}`);
+      if (r.status !== 200) {
+        throw new Error(`HTTP ${r.status} — ${r.data?.error || 'no error message'}`);
       }
+      detail = r.data;
+    } catch (err) {
+      stopSpinner();
+      console.log(`${prefix} ${C.red}✗ FAIL${C.reset}  ${C.dim}${id}${C.reset}`);
+      console.log(`${' '.repeat(indexWidth * 2 + 4)}  ${C.red}└─ ${err.message}${C.reset}`);
+      failed++;
+      fs.appendFileSync(ERROR_LOG, `[FAIL] ${id}\n       URL: ${url}\n       Reason: ${err.message}\n\n`);
+      continue;
+    }
 
-      if (items.length === 0) break; // no more pages for this cuisine
+    const name = detail.name || id;
 
-      for (const recipe of items) {
-        if (cached + pass >= TARGET) break outer;
-        const recipeName = (recipe.name || '').trim().toLowerCase();
+    // ── Download images ──────────────────────────────────────────
+    let imgOk = 0, imgFail = 0;
 
-        if (seenIds.has(recipe.id)) {
-          dup++;
-          logSkip('id', recipe.name || recipe.id);
-          render();
-          continue;
-        }
-        if (seenNames.has(recipeName)) {
-          dup++;
-          logSkip('name', recipe.name || recipeName);
-          render();
-          continue;
-        }
+    async function dlImg(urlStr) {
+      if (!urlStr) return '';
+      await sleep(IMG_DELAY);
+      const b64 = await fetchB64(urlStr);
+      if (b64) { imgOk++; return b64; }
+      imgFail++;
+      return urlStr; // keep original URL if download fails
+    }
 
-        try {
-          // ── Detail + hero image (same image used for card) ────
-          statusMsg = `[${cached + pass + 1}/${TARGET}] Detail: ${recipe.name.slice(0, 34)}`;
-          render();
-          await sleep(DELAY_MS);
-          const detail = await get(`${SERVER}/api/recipe/${recipe.id}`);
+    startSpinner(prefix, `downloading images — ${name}`);
 
-          // ── Hero image (reused as card thumbnail) ──────────────
-          if (detail.image) {
-            await sleep(DELAY_MS);
-            detail.image = await fetchB64(detail.image);
-          }
-          // ── Ingredient images ──────────────────────────────────
-          for (const ing of (detail.ingredients || [])) {
-            if (!ing.image) continue;
-            await sleep(800);
-            ing.image = await fetchB64(ing.image);
-          }
+    detail.image = await dlImg(detail.image);
 
-          // ── Step images ────────────────────────────────────────
-          for (const step of (detail.steps || [])) {
-            if (!step.image) continue;
-            statusMsg = `[${cached + pass + 1}/${TARGET}] Step img: ${recipe.name.slice(0, 30)}`;
-            render();
-            await sleep(DELAY_MS);
-            step.image = await fetchB64(step.image);
-          }
+    for (const ing of (detail.ingredients || [])) {
+      ing.image = await dlImg(ing.image);
+    }
+    for (const step of (detail.steps || [])) {
+      step.image = await dlImg(step.image);
+    }
 
-          // ── Save detail cache ──────────────────────────────────
-          fs.writeFileSync(
-            path.join(DETAIL_DIR, `${recipe.id}.json`),
-            JSON.stringify(detail)
-          );
+    // ── Save ─────────────────────────────────────────────────────
+    stopSpinner();
+    fs.writeFileSync(path.join(DETAIL_DIR, `${id}.json`), JSON.stringify(detail));
+    cachedIds.add(id);
+    saved++;
 
-          seenIds.add(recipe.id);
-          seenNames.add(recipeName);
-          pass++;
-          render();
+    // ── ETA ──────────────────────────────────────────────────────
+    const elapsed   = Date.now() - startTime;
+    const avgMs     = elapsed / saved;
+    const remaining = toFetch.length - saved - failed;
+    const eta       = remaining > 0 && saved > 2 ? ` ETA ~${fmt(avgMs * remaining)}` : '';
 
-        } catch (err) {
-          fail++;
-          const errLine = `[FAIL] ${recipe.name || recipe.id} — ${err.message}`;
-          statusMsg = errLine.slice(0, W - 2);
-          fs.appendFileSync(path.join(__dirname, 'scrape-errors.log'), errLine + '\n');
-          render();
-        }
+    // ── Result line ──────────────────────────────────────────────
+    const imgNote = imgFail > 0
+      ? `${imgOk} imgs, ${C.yellow}${imgFail} failed${C.reset}`
+      : `${imgOk} imgs`;
 
-        await sleep(BATCH_DELAY);
-      }
+    console.log(
+      `${prefix} ${C.green}✓${C.reset} ${col(name, 44)} ${C.dim}${imgNote}${eta}${C.reset}`
+    );
 
-      page++;
-      await sleep(BATCH_DELAY);
+    // Every 25 saves, print a mini running total
+    if (saved % 25 === 0) {
+      console.log(
+        `${C.dim}${'·'.repeat(64)}` +
+        `  ${saved} saved / ${failed} failed / ${remaining} left${C.reset}`
+      );
     }
   }
 
-  statusMsg = `Done! ${pass} new, ${cached} pre-cached — ${seenIds.size} total in detail-cache/`;
-  render();
-  process.stdout.write('\n');
+  // ── 5. Final summary ─────────────────────────────────────────────
+  const totalElapsed = Date.now() - startTime;
+  const dividerThick = '═'.repeat(64);
+  console.log(`\n${dividerThick}`);
+  console.log(`  ${C.bold}Done${C.reset} — finished in ${fmt(totalElapsed)}`);
+  console.log(`  ${C.green}✓ Saved   :${C.reset}  ${saved}`);
+  console.log(`  ${C.dim}○ Cached  :  ${toSkip.length}  (skipped — already existed)${C.reset}`);
+  console.log(`  ${C.red}✗ Failed  :  ${failed}${C.reset}`);
+  if (badUrls.length)
+    console.log(`  ${C.yellow}⚠ Bad URLs:  ${badUrls.length}${C.reset}`);
+  if (failed > 0 || badUrls.length > 0)
+    console.log(`\n  Full error details → ${ERROR_LOG}`);
+  console.log(`${dividerThick}\n`);
 }
 
 main().catch(err => {
-  process.stdout.write('\n');
-  console.error('Fatal:', err.message);
+  console.error(`\n${C.red}Fatal: ${err.message}${C.reset}\n`);
   process.exit(1);
 });
