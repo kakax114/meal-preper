@@ -65,6 +65,24 @@ function extractId(url) {
 }
 
 // ── HTTP helpers ──────────────────────────────────────────────────
+
+/**
+ * Extract a human-readable message from any thrown value.
+ * Node.js ECONNREFUSED on dual-stack (IPv4+IPv6) comes back as an
+ * AggregateError with an empty .message — the real info is in .errors[].
+ */
+function errMsg(err) {
+  if (!err) return 'unknown error';
+  // AggregateError: real sub-errors are in .errors[]
+  if (err.errors && err.errors.length > 0) {
+    const sub = err.errors[0];
+    return sub.message || sub.code || String(sub);
+  }
+  if (err.message) return err.message;
+  if (err.code)    return err.code;
+  return String(err);
+}
+
 function get(urlStr) {
   return new Promise((resolve, reject) => {
     const req = http.get(urlStr, res => {
@@ -75,13 +93,26 @@ function get(urlStr) {
         try {
           resolve({ status: res.statusCode, data: JSON.parse(text) });
         } catch {
-          reject(new Error(`JSON parse error (HTTP ${res.statusCode})`));
+          reject(new Error(`JSON parse error (HTTP ${res.statusCode}): ${text.slice(0, 80)}`));
         }
       });
     });
     req.setTimeout(30_000, () => { req.destroy(); reject(new Error('timeout after 30s')); });
-    req.on('error', reject);
+    req.on('error', err => reject(new Error(errMsg(err)))); // normalise to plain Error
   });
+}
+
+/** Ping the local server; exit with a helpful message if it's not up. */
+async function checkServer() {
+  try {
+    await get(`${SERVER}/api/recipes?cuisine=test&page=0`);
+  } catch (err) {
+    const msg = errMsg(err);
+    console.error(`\n${C.red}${C.bold}Error: cannot reach server at ${SERVER}${C.reset}`);
+    console.error(`${C.red}  ${msg}${C.reset}`);
+    console.error(`${C.yellow}  → Start it first with: node server.js${C.reset}\n`);
+    process.exit(1);
+  }
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -185,7 +216,12 @@ async function main() {
     return;
   }
 
-  // ── 4. Scrape loop ──────────────────────────────────────────────
+  // ── 4. Check server is reachable before we start ────────────────
+  process.stdout.write(`  Checking server… `);
+  await checkServer();
+  console.log(`${C.green}OK${C.reset}\n`);
+
+  // ── 5. Scrape loop ──────────────────────────────────────────────
   let saved = 0, failed = 0;
   const startTime  = Date.now();
   const indexWidth = String(toFetch.length).length;
@@ -206,11 +242,12 @@ async function main() {
       }
       detail = r.data;
     } catch (err) {
+      const reason = errMsg(err);
       stopSpinner();
       console.log(`${prefix} ${C.red}✗ FAIL${C.reset}  ${C.dim}${id}${C.reset}`);
-      console.log(`${' '.repeat(indexWidth * 2 + 4)}  ${C.red}└─ ${err.message}${C.reset}`);
+      console.log(`${' '.repeat(indexWidth * 2 + 4)}  ${C.red}└─ ${reason}${C.reset}`);
       failed++;
-      fs.appendFileSync(ERROR_LOG, `[FAIL] ${id}\n       URL: ${url}\n       Reason: ${err.message}\n\n`);
+      fs.appendFileSync(ERROR_LOG, `[FAIL] ${id}\n       URL: ${url}\n       Reason: ${reason}\n\n`);
       continue;
     }
 
