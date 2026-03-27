@@ -1,0 +1,4 @@
+node_modules/
+scrape-errors.log
+*.log
+.DS_Store
