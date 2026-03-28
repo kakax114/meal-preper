@@ -279,17 +279,23 @@ async function main() {
   // ── 2. Categorise ────────────────────────────────────────────────
   if (!fs.existsSync(DETAIL_DIR)) fs.mkdirSync(DETAIL_DIR, { recursive: true });
 
-  const cachedIds = new Set(
-    fs.readdirSync(DETAIL_DIR)
-      .filter(f => f.endsWith('.json'))
-      .map(f => f.replace('.json', '')),
-  );
+  const cachedFiles = fs.readdirSync(DETAIL_DIR).filter(f => f.endsWith('.json'));
+  const cachedIds   = new Set(cachedFiles.map(f => f.replace('.json', '')));
+
+  // Build name → id map from existing cache to deduplicate same-name recipes
+  const cachedNames = new Map(); // normalised name → id
+  for (const f of cachedFiles) {
+    try {
+      const d = JSON.parse(fs.readFileSync(path.join(DETAIL_DIR, f), 'utf8'));
+      if (d.name) cachedNames.set(d.name.trim().toLowerCase(), f.replace('.json', ''));
+    } catch {}
+  }
 
   const badUrls = [], toSkip = [], toFetch = [];
   for (const url of allUrls) {
     const id = extractId(url);
     if (!id)               { badUrls.push(url); continue; }
-    if (cachedIds.has(id)) { toSkip.push({ url, id }); continue; }
+    if (cachedIds.has(id)) { toSkip.push({ url, id, reason: 'id' }); continue; }
     toFetch.push({ url, id });
   }
 
@@ -356,7 +362,17 @@ async function main() {
       continue;
     }
 
-    const name = detail.name || id;
+    const name    = detail.name || id;
+    const nameKey = name.trim().toLowerCase();
+
+    // ── Skip if same recipe name already cached under a different ID ──
+    if (cachedNames.has(nameKey)) {
+      const existingId = cachedNames.get(nameKey);
+      stopSpinner();
+      console.log(`${prefix} ${C.dim}≡ DUP${C.reset}   ${C.dim}${id}${C.reset}`);
+      console.log(`${''.padEnd(indexWidth * 2 + 5)}${C.dim}└─ same name as ${existingId}, skipping${C.reset}`);
+      continue;
+    }
 
     // ── Download images ──────────────────────────────────────────
     let imgOk = 0, imgFail = 0;
@@ -379,6 +395,7 @@ async function main() {
     stopSpinner();
     fs.writeFileSync(path.join(DETAIL_DIR, `${id}.json`), JSON.stringify(detail));
     cachedIds.add(id);
+    cachedNames.set(nameKey, id); // prevent future duplicates in this run
     saved++;
 
     const elapsed   = Date.now() - startTime;
