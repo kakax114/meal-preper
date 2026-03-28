@@ -705,12 +705,18 @@ function isInWeek(id, key) {
   return getWeekPlan(key).some(r => r.id === id);
 }
 
+function prefetchWeekDetails(weekKey) {
+  const plan = getWeekPlan(weekKey || currentWeekKey());
+  plan.forEach(r => prefetchDetail(r.id));
+}
+
 function addToWeek(recipe) {
   const key = currentWeekKey();
   const plan = getWeekPlan(key);
   if (!plan.find(r => r.id === recipe.id)) {
     plan.push({ id: recipe.id, name: recipe.name, image: recipe.imageThumb || recipe.image || '', cuisine: recipe.cuisine || '' });
     saveWeekPlan(key, plan);
+    prefetchDetail(recipe.id); // warm cache immediately on add
   }
 }
 
@@ -1597,6 +1603,14 @@ function empty(title, sub) {
 
   // Restore browse mode
   applyBrowseMode();
+
+  // Warm detail cache for this week + next 2 weeks in background
+  setTimeout(() => {
+    const cwk = currentWeekKey();
+    prefetchWeekDetails(cwk);
+    prefetchWeekDetails(weekKeyOffset(cwk, 1));
+    prefetchWeekDetails(weekKeyOffset(cwk, 2));
+  }, 500); // slight delay so recipes load first
 
   // Load cuisines + recipes
   loadCuisines();
