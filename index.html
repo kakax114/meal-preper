@@ -787,23 +787,53 @@ function applyBrowseMode() {
   if (isScroll) renderScrollList();
 }
 
+/* ── Virtual scroll ──────────────────────────────────────────── */
+const SCROLL_BATCH = 30;
+let scrollRenderedCount = 0;
+let scrollObserver = null;
+
+function scrollItemHTML(r) {
+  const isSaved = !!savedList.find(x => x.id === r.id);
+  return `<div class="scroll-recipe" ontouchstart="prefetchDetail('${r.id}')" onclick="openDetail('${r.id}')">
+    <img class="scroll-recipe-img" src="${r.imageThumb||''}" alt="${r.name}" loading="lazy">
+    <div class="scroll-recipe-info">
+      <p class="scroll-recipe-name">${r.name}</p>
+      <p class="scroll-recipe-meta">${r.cuisine}${r.difficulty?' · '+r.difficulty:''}</p>
+    </div>
+    <button class="card-save-btn${isSaved?' saved':''}" style="position:static;margin:0 0 0 8px" onclick="event.stopPropagation();quickSave('${r.id}',this)">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </button>
+  </div>`;
+}
+
 function renderScrollList() {
   const el = document.getElementById('scroll-list');
   const items = queue.slice(qIdx);
   if (!items.length) { el.innerHTML='<div class="center-state"><p class="state-title">All caught up</p></div>'; return; }
-  el.innerHTML = items.map(r => {
-    const isSaved = !!savedList.find(x => x.id === r.id);
-    return `<div class="scroll-recipe" onclick="openDetail('${r.id}')">
-      <img class="scroll-recipe-img" src="${r.imageThumb||r.image||''}" alt="${r.name}" loading="lazy">
-      <div class="scroll-recipe-info">
-        <p class="scroll-recipe-name">${r.name}</p>
-        <p class="scroll-recipe-meta">${r.cuisine}${r.difficulty?' · '+r.difficulty:''}</p>
-      </div>
-      <button class="card-save-btn${isSaved?' saved':''}" style="position:static;margin:0 0 0 8px" onclick="event.stopPropagation();quickSave('${r.id}',this)">
-        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      </button>
-    </div>`;
-  }).join('');
+
+  // Disconnect any previous observer
+  if (scrollObserver) { scrollObserver.disconnect(); scrollObserver = null; }
+  scrollRenderedCount = 0;
+
+  const firstBatch = items.slice(0, SCROLL_BATCH);
+  scrollRenderedCount = firstBatch.length;
+
+  el.innerHTML = firstBatch.map(scrollItemHTML).join('') +
+    (items.length > SCROLL_BATCH ? '<div id="scroll-sentinel" style="height:1px"></div>' : '');
+
+  if (items.length > SCROLL_BATCH) {
+    scrollObserver = new IntersectionObserver(entries => {
+      if (!entries[0].isIntersecting) return;
+      const nextBatch = items.slice(scrollRenderedCount, scrollRenderedCount + SCROLL_BATCH);
+      if (!nextBatch.length) { scrollObserver.disconnect(); return; }
+      const sentinel = document.getElementById('scroll-sentinel');
+      if (sentinel) sentinel.insertAdjacentHTML('beforebegin', nextBatch.map(scrollItemHTML).join(''));
+      scrollRenderedCount += nextBatch.length;
+      if (scrollRenderedCount >= items.length) scrollObserver.disconnect();
+    }, { rootMargin: '200px' });
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) scrollObserver.observe(sentinel);
+  }
 }
 
 /* ── Theme ───────────────────────────────────────────────────── */
@@ -836,7 +866,27 @@ async function fetchPage(q, page) {
   const r = await fetch(`/api/recipes?${params}`);
   return r.json();
 }
-async function fetchDetail(id) { const r = await fetch(`/api/recipe/${id}`); return r.json(); }
+/* ── Detail prefetch cache ─────────────────────────────────── */
+const detailCache = new Map();
+
+async function fetchDetail(id) {
+  if (detailCache.has(id)) return detailCache.get(id);
+  const p = fetch(`/api/recipe/${id}`).then(r => r.json());
+  detailCache.set(id, p); // store the promise so concurrent calls share it
+  try {
+    const d = await p;
+    detailCache.set(id, d); // replace promise with resolved value
+    return d;
+  } catch(e) {
+    detailCache.delete(id);
+    throw e;
+  }
+}
+
+function prefetchDetail(id) {
+  if (!detailCache.has(id)) fetchDetail(id).catch(()=>{});
+}
+
 async function fetchImg(imgUrl) { const r = await fetch(`/api/img?url=${encodeURIComponent(imgUrl)}`); const d = await r.json(); return d.dataUrl || ''; }
 
 const imgCache = new Map();
@@ -979,7 +1029,7 @@ function attachSwipe(card, id) {
   card.addEventListener('mousedown',  e => onStart(e.clientX, e.clientY));
   window.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX, e.clientY); });
   window.addEventListener('mouseup',   onEnd);
-  card.addEventListener('touchstart',  e => onStart(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
+  card.addEventListener('touchstart',  e => { prefetchDetail(id); onStart(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
   card.addEventListener('touchmove',   e => { if (dragging&&moved) e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
   card.addEventListener('touchend',    onEnd, {passive:true});
 }

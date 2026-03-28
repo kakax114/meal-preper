@@ -5,11 +5,13 @@ const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
 const url   = require('url');
+const zlib  = require('zlib');
 
 const PORT        = process.env.PORT || 3456;
 const API_BASE    = 'https://gw.hellofresh.com/api';
 const IMG_BASE    = 'https://img.hellofresh.com/hellofresh_s3/image/upload';
 const DETAIL_DIR  = path.join(__dirname, 'detail-cache');
+const INDEX_FILE  = path.join(__dirname, 'recipe-index.json');
 
 // ── Token cache ────────────────────────────────────────────────
 let _token       = null;
@@ -47,16 +49,16 @@ function buildLocalIndex() {
         id:         d.id,
         name:       d.name,
         headline:   d.headline,
-        // Prefer base64 (no internet needed); fall back to CDN URL
-        imageThumb: d.image || d.imageThumb || '',
-        image:      d.image || d.imageThumb || '',
+        // CDN URL only — no base64 in the index (keeps payload tiny)
+        // Detail view fetches full JSON on demand (which has base64)
+        imageThumb: d.imageThumb || '',
         cuisine:    d.cuisine,
         difficulty: d.difficulty,
-        totalTime:  d.totalTime,
         prepTime:   d.prepTime,
         servings:   d.servings,
         rating:     d.rating,
-        tags:       d.tags,
+        tags:       d.tags || [],
+        ingredients: (d.ingredients || []).map(i => ({ name: i.name })), // names only for search
       };
     } catch { return null; }
   }).filter(Boolean);
@@ -73,7 +75,27 @@ function buildLocalIndex() {
   }
 
   _localIndex = deduped;
-  console.log(`[local] Loaded ${_localIndex.length} unique recipes from ${all.length} files`);
+
+  // Persist lightweight index to disk so restarts are instant
+  try {
+    fs.writeFileSync(INDEX_FILE, JSON.stringify(_localIndex));
+  } catch (e) {
+    console.warn('[local] Could not write recipe-index.json:', e.message);
+  }
+
+  console.log(`[local] Indexed ${_localIndex.length} unique recipes from ${all.length} files`);
+}
+
+function loadIndexFromFile() {
+  try {
+    if (!fs.existsSync(INDEX_FILE)) return false;
+    const stat = fs.statSync(INDEX_FILE);
+    const ageSec = (Date.now() - stat.mtimeMs) / 1000;
+    if (ageSec > 3600) return false; // stale after 1h — rebuild from files
+    _localIndex = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf8'));
+    console.log(`[local] Loaded ${_localIndex.length} recipes from recipe-index.json (${Math.round(ageSec)}s old)`);
+    return true;
+  } catch { return false; }
 }
 
 // ── Generic HTTPS fetch (follows one redirect) ─────────────────
@@ -214,14 +236,45 @@ function normDetail(r) {
   return { ...base, description, youtubeLink, allergens, ingredients, steps, nutrition };
 }
 
-function jsonReply(res, status, data) {
-  const body = JSON.stringify(data);
-  res.writeHead(status, {
-    'Content-Type':  'application/json',
-    'Cache-Control': 'no-store',
+function jsonReply(res, status, data, { cache = 'no-store', req = null } = {}) {
+  const body    = Buffer.from(JSON.stringify(data), 'utf8');
+  const useGzip = req && /gzip/.test(req.headers['accept-encoding'] || '');
+  const headers = {
+    'Content-Type':                'application/json',
+    'Cache-Control':               cache,
     'Access-Control-Allow-Origin': '*',
-  });
-  res.end(body);
+  };
+  if (useGzip) headers['Content-Encoding'] = 'gzip';
+
+  if (useGzip) {
+    zlib.gzip(body, (err, buf) => {
+      res.writeHead(status, headers);
+      res.end(err ? body : buf);
+    });
+  } else {
+    res.writeHead(status, headers);
+    res.end(body);
+  }
+}
+
+function staticReply(res, filePath, req) {
+  const ext   = path.extname(filePath).toLowerCase();
+  const mimes = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
+  const mime  = mimes[ext] || 'application/octet-stream';
+  const body  = fs.readFileSync(filePath);
+  const useGzip = req && /gzip/.test(req.headers['accept-encoding'] || '') && ['.html','.js','.css','.json'].includes(ext);
+  const headers = {
+    'Content-Type':  mime,
+    'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600',
+  };
+  if (useGzip) headers['Content-Encoding'] = 'gzip';
+
+  if (useGzip) {
+    zlib.gzip(body, (err, buf) => { res.writeHead(200, headers); res.end(err ? body : buf); });
+  } else {
+    res.writeHead(200, headers);
+    res.end(body);
+  }
 }
 
 // ── Build featured recipes (one per cuisine, scraped from HF pages) ─
@@ -309,7 +362,7 @@ const server = http.createServer(async (req, res) => {
         .map(m => m[1])
         .filter(l => l.includes('-recipes') && !l.startsWith('http'))
         .filter((v,i,a) => a.indexOf(v) === i);  // dedupe
-      jsonReply(res, 200, { links });
+      jsonReply(res, 200, { links }, { req });
       return;
     }
 
@@ -319,47 +372,41 @@ const server = http.createServer(async (req, res) => {
       const pageRes = await hfetch(`https://www.hellofresh.com/recipes/${pagePath}`);
       const html = pageRes.text();
       const m = html.match(/<script id="__NEXT_DATA__" type="application\/json">([^<]+)<\/script>/);
-      if (!m) { jsonReply(res, 500, { error: 'No __NEXT_DATA__ found' }); return; }
+      if (!m) { jsonReply(res, 500, { error: 'No __NEXT_DATA__ found' }, { req }); return; }
       const nextData = JSON.parse(m[1]);
       const ssrPayload = nextData?.props?.pageProps?.ssrPayload;
       const queries = ssrPayload?.dehydratedState?.queries || [];
-      // Find the query that has recipe items
       const recipeQuery = queries.find(q => {
         const data = q?.state?.data;
         return data?.items && Array.isArray(data.items) && data.items.length > 0 && data.items[0]?.id;
       });
       if (!recipeQuery) {
-        // Show query keys to help debug
         const info = queries.map(q => ({ hash: q.queryHash, dataKeys: Object.keys(q?.state?.data||{}) }));
-        jsonReply(res, 200, { found: false, queries: info });
+        jsonReply(res, 200, { found: false, queries: info }, { req });
         return;
       }
-      jsonReply(res, 200, { found: true, total: recipeQuery.state.data.total, sample: recipeQuery.state.data.items.slice(0,2).map(r => ({ id:r.id, name:r.name, totalTime:r.totalTime, imagePath:r.imagePath })) });
+      jsonReply(res, 200, { found: true, total: recipeQuery.state.data.total, sample: recipeQuery.state.data.items.slice(0,2).map(r => ({ id:r.id, name:r.name, totalTime:r.totalTime, imagePath:r.imagePath })) }, { req });
       return;
     }
 
     // ── /api/featured — one recipe per cuisine page ────────────
     if (pathname === '/api/featured') {
       if (_featuredCache && Date.now() < _featuredExpiry) {
-        jsonReply(res, 200, _featuredCache);
+        jsonReply(res, 200, _featuredCache, { req, cache: 'public, max-age=3600' });
         return;
       }
       if (!_featuredPending) _featuredPending = buildFeatured();
       const result = await _featuredPending;
-      jsonReply(res, 200, result);
+      jsonReply(res, 200, result, { req, cache: 'public, max-age=3600' });
       return;
     }
-
 
     // ── /api/cuisines — unique cuisines from local cache ──────
     if (pathname === '/api/cuisines') {
       const cuisines = [...new Set(
-        _localIndex
-          .map(r => r.cuisine)
-          .filter(Boolean)
-          .sort(),
+        _localIndex.map(r => r.cuisine).filter(Boolean).sort(),
       )];
-      jsonReply(res, 200, { cuisines });
+      jsonReply(res, 200, { cuisines }, { req, cache: 'public, max-age=300' });
       return;
     }
 
@@ -369,7 +416,6 @@ const server = http.createServer(async (req, res) => {
       const cuisine = query.cuisine || '';
       const page    = Math.max(0, parseInt(query.page) || 0);
 
-      // Serve from detail-cache index if populated
       if (_localIndex.length > 0) {
         let items = _localIndex;
         if (cuisine && cuisine !== 'All') {
@@ -382,48 +428,33 @@ const server = http.createServer(async (req, res) => {
         }
         const all   = query.all === '1';
         const slice = all ? items : items.slice(page * 20, page * 20 + 20);
-        jsonReply(res, 200, { items: slice, total: items.length, page });
+        jsonReply(res, 200, { items: slice, total: items.length, page }, { req, cache: 'public, max-age=60' });
         return;
       }
 
       const token = await getToken();
-      const limit = 20;
-
-      const params = new URLSearchParams({
-        country: 'US',
-        locale:  'en-US',
-        limit:   200,
-        skip:    page * 20,
-      });
+      const params = new URLSearchParams({ country: 'US', locale: 'en-US', limit: 200, skip: page * 20 });
       if (cuisine && cuisine !== 'All') params.set('q', cuisine);
 
-      const apiRes = await hfetch(
-        `${API_BASE}/recipes/search?${params}`,
-        { Authorization: `Bearer ${token}` },
-      );
-
+      const apiRes = await hfetch(`${API_BASE}/recipes/search?${params}`, { Authorization: `Bearer ${token}` });
       if (apiRes.status !== 200) {
-        jsonReply(res, apiRes.status, { error: 'HelloFresh API error', status: apiRes.status });
+        jsonReply(res, apiRes.status, { error: 'HelloFresh API error', status: apiRes.status }, { req });
         return;
       }
 
       const data  = apiRes.json();
       const items = (data.items || [])
         .filter(r => {
-          // Drop pre-made/supplement products
           const tags = (r.tags || []).map(t => (t.name || '').toLowerCase());
           if (tags.includes('ineligible-reco')) return false;
-          // Drop bulk items (pre-packaged — absurd serving counts)
           if ((r.servingSize || 0) > 10) return false;
-          // Drop anything with no real cook time (supplements, salad kits)
-          const prep = r.prepTime || ''; const total = r.totalTime || '';
           const mins = m => { const x = m.match(/PT(?:(\d+)H)?(?:(\d+)M)?/); if(!x) return 0; return parseInt(x[1]||0)*60+parseInt(x[2]||0); };
-          if (mins(total) < 15) return false;  // drop <15 min items (supplements, dinner bars)
+          if (mins(r.totalTime||'') < 15) return false;
           return true;
         })
         .map(normRecipe);
 
-      jsonReply(res, 200, { items, total: items.length, page });
+      jsonReply(res, 200, { items, total: items.length, page }, { req });
       return;
     }
 
@@ -431,28 +462,21 @@ const server = http.createServer(async (req, res) => {
     const detailMatch = pathname.match(/^\/api\/recipe\/([^/]+)$/);
     if (detailMatch) {
       const id = detailMatch[1];
-
-      // Serve from detail-cache if available
       const cached = path.join(DETAIL_DIR, `${id}.json`);
       if (fs.existsSync(cached)) {
         const data = JSON.parse(fs.readFileSync(cached, 'utf8'));
-        jsonReply(res, 200, data);
+        // Cache detail for 24h — data won't change once scraped
+        jsonReply(res, 200, data, { req, cache: 'public, max-age=86400' });
         return;
       }
 
       const token = await getToken();
-
-      const apiRes = await hfetch(
-        `${API_BASE}/recipes/${id}?country=US&locale=en-US`,
-        { Authorization: `Bearer ${token}` },
-      );
-
+      const apiRes = await hfetch(`${API_BASE}/recipes/${id}?country=US&locale=en-US`, { Authorization: `Bearer ${token}` });
       if (apiRes.status !== 200) {
-        jsonReply(res, apiRes.status, { error: 'Recipe not found' });
+        jsonReply(res, apiRes.status, { error: 'Recipe not found' }, { req });
         return;
       }
-
-      jsonReply(res, 200, normDetail(apiRes.json()));
+      jsonReply(res, 200, normDetail(apiRes.json()), { req });
       return;
     }
 
@@ -462,33 +486,25 @@ const server = http.createServer(async (req, res) => {
       if (!src || !src.startsWith('https://img.hellofresh.com')) {
         res.writeHead(400); res.end('Invalid image URL'); return;
       }
-
       if (imgCache.has(src)) {
-        jsonReply(res, 200, { dataUrl: imgCache.get(src) });
+        jsonReply(res, 200, { dataUrl: imgCache.get(src) }, { req, cache: 'public, max-age=86400' });
         return;
       }
-
       const imgRes  = await hfetch(src);
       const mime    = imgRes.contentType.split(';')[0] || 'image/jpeg';
       const dataUrl = `data:${mime};base64,${imgRes.buffer.toString('base64')}`;
-
       imgCache.set(src, dataUrl);
-      // Keep cache below 200 entries
       if (imgCache.size > 200) imgCache.delete(imgCache.keys().next().value);
-
-      jsonReply(res, 200, { dataUrl });
+      jsonReply(res, 200, { dataUrl }, { req, cache: 'public, max-age=86400' });
       return;
     }
 
     // ── Static files ──────────────────────────────────────────
     let filePath = pathname === '/' ? '/index.html' : pathname;
-    filePath = path.join(__dirname, filePath.replace(/\.\./g, '')); // basic traversal guard
+    filePath = path.join(__dirname, filePath.replace(/\.\./g, ''));
 
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      const ext   = path.extname(filePath).toLowerCase();
-      const mimes = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
-      res.writeHead(200, { 'Content-Type': mimes[ext] || 'application/octet-stream' });
-      res.end(fs.readFileSync(filePath));
+      staticReply(res, filePath, req);
     } else {
       res.writeHead(404); res.end('Not found');
     }
@@ -501,8 +517,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`\nMy Cookbook → http://localhost:${PORT}\n`);
-  buildLocalIndex(); // load detail-cache into memory
+  // Fast start: try loading pre-built index first, rebuild from files if stale/missing
+  if (!loadIndexFromFile()) buildLocalIndex();
   getToken().catch(e => console.warn('[token] Warm-up failed:', e.message));
-  // Pre-warm featured cache only if no local recipes yet
   if (_localIndex.length === 0) setTimeout(() => { _featuredPending = buildFeatured(); }, 1000);
 });
