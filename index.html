@@ -296,13 +296,24 @@ img { display: block; }
 .week-center { flex: 1; text-align: center; }
 .week-label { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; line-height: 1.2; }
 .week-sublabel { font-size: 12px; color: var(--text2); margin-top: 1px; }
-.week-add-btn {
-  width: 34px; height: 34px; border-radius: 50%; border: none;
+.week-fab {
+  position: fixed;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  right: max(20px, calc(50vw - 215px + 20px));
+  width: 54px; height: 54px; border-radius: 50%; border: none;
   background: var(--green); display: flex; align-items: center; justify-content: center;
-  color: #fff; flex-shrink: 0;
+  box-shadow: 0 4px 18px rgba(45,106,79,.45), 0 2px 6px rgba(0,0,0,.18);
+  z-index: 10; transition: opacity .2s, transform .2s;
 }
-.week-add-btn:active { opacity: .8; }
-.week-add-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.week-fab:active { transform: scale(.93); }
+.week-fab svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.week-fab[hidden] { display: none; }
+.week-today-pill {
+  font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+  background: var(--green); color: #fff; border: none; display: none;
+  margin-top: 4px;
+}
+.week-today-pill.visible { display: inline-block; }
 .week-mode-row { display: flex; gap: 0; padding: 0 16px 12px; }
 .week-mode-btn {
   flex: 1; padding: 8px 0; border: 0.5px solid var(--border); background: var(--bg);
@@ -471,12 +482,10 @@ img { display: block; }
         <div class="week-center">
           <p class="week-label" id="week-label-text">This Week</p>
           <p class="week-sublabel" id="week-range-text"></p>
+          <button class="week-today-pill" id="week-today-pill" onclick="jumpToThisWeek()">↩ This Week</button>
         </div>
         <button class="week-nav-btn" id="week-next-btn" onclick="changeWeek(1)">
           <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-        <button class="week-add-btn" id="week-add-btn" onclick="openPicker()">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
       <div class="week-mode-row">
@@ -492,6 +501,10 @@ img { display: block; }
       </div>
       <div class="week-plan-body" id="week-plan-body"></div>
     </div>
+    <!-- FAB -->
+    <button class="week-fab" id="week-fab" onclick="openPicker()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
     <!-- Shop view -->
     <div id="week-shop-view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
       <div class="shop-toggle-row">
@@ -1152,13 +1165,23 @@ function mealRow(r, delFn) {
 function renderWeekHeader() {
   const cwk = currentWeekKey();
   const past = isPastWeek(viewingWeekKey);
+  const isCurrentWeek = viewingWeekKey === cwk;
   const maxFuture = weekKeyOffset(cwk, 2);
 
   document.getElementById('week-label-text').textContent = weekLabel(viewingWeekKey);
   document.getElementById('week-range-text').textContent = weekRange(viewingWeekKey);
   document.getElementById('week-prev-btn').disabled = false;
   document.getElementById('week-next-btn').disabled = viewingWeekKey >= maxFuture;
-  document.getElementById('week-add-btn').style.visibility = past ? 'hidden' : 'visible';
+  // FAB: show only for current/future weeks in plan mode
+  const fab = document.getElementById('week-fab');
+  fab.style.display = (!past && weekMode === 'plan') ? 'flex' : 'none';
+  // "This Week" jump pill: show when not on current week
+  document.getElementById('week-today-pill').classList.toggle('visible', !isCurrentWeek);
+}
+
+function jumpToThisWeek() {
+  viewingWeekKey = currentWeekKey();
+  renderWeekTab();
 }
 
 function renderWeekTab() {
