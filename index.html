@@ -56,8 +56,7 @@ img { display: block; }
 /* ── App shell ──────────────────────────────────────────────── */
 #app { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg); }
 
-/* ── Shared header (persistent across all tabs) ─────────────── */
-#shared-header { flex-shrink: 0; background: var(--card); border-bottom: 0.5px solid var(--border); padding-bottom: 10px; }
+/* ── Topbar ─────────────────────────────────────────────────── */
 .topbar-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: calc(14px + env(safe-area-inset-top)) 16px 0;
@@ -75,7 +74,7 @@ img { display: block; }
 .seg-btn.on { background: var(--green-bg); color: var(--green-mid); }
 .seg-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Search icon btn (standalone) */
+/* Search icon btn */
 .icon-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; transition: background .15s; }
 .icon-btn:active { background: var(--card2); }
 .icon-btn svg { width: 16px; height: 16px; stroke: var(--text2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -105,7 +104,7 @@ img { display: block; }
 .nav-btn.active { background: var(--green); color: #fff; }
 .nav-btn.active svg { stroke: #fff; }
 
-/* Search */
+/* ── Search bar ─────────────────────────────────────────────── */
 .search-bar { background: var(--card); padding: 10px 16px 12px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; display: none; }
 .search-inner { position: relative; }
 .search-inner svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; stroke: var(--text3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
@@ -123,13 +122,16 @@ img { display: block; }
 .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
 .screen.active { display: flex; }
 
-/* Detail overrides — fixed full-screen overlay */
+/* Detail overlay */
 #detail-screen {
   position: fixed; inset: 0; z-index: 100;
   background: var(--bg); display: none;
   flex-direction: column;
 }
 #detail-screen.active { display: flex; }
+
+/* ── Recipes screen header ─────────────────────────────────── */
+#recipes-header { flex-shrink: 0; background: var(--card); border-bottom: 0.5px solid var(--border); padding-bottom: 10px; }
 
 /* ── Swipe area ─────────────────────────────────────────────── */
 .swipe-area { flex: 1; padding: 14px 14px calc(80px + env(safe-area-inset-bottom)) 14px; position: relative; overflow: hidden; }
@@ -214,7 +216,7 @@ img { display: block; }
 .d-btn { flex: 1; padding: 12px 0; border-radius: var(--r10); border: none; font-size: 13px; font-weight: 600; transition: opacity .15s; }
 .d-btn:active { opacity: .8; }
 .d-btn-week { background: var(--green); color: #fff; }
-.d-btn-list { background: var(--green-bg); color: var(--green-mid); border: 0.5px solid var(--green-light); }
+.d-btn-week.in-week { background: var(--green-bg); color: var(--green-mid); border: 0.5px solid var(--green-light); }
 
 .yt-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: var(--r10); background: rgba(220,38,38,.12); color: #fca5a5; font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; border: 0.5px solid rgba(220,38,38,.2); }
 .yt-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
@@ -246,10 +248,7 @@ img { display: block; }
 .step-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 3px; }
 .step-text { font-size: 13px; line-height: 1.65; color: var(--text); }
 
-/* ── List screens ─────────────────────────────────────────────── */
-.screen-subheader { padding: 14px 18px 10px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 0.5px solid var(--border); }
-.screen-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
-.screen-sub { font-size: 13px; color: var(--text2); margin-bottom: 1px; }
+/* ── List body (shared) ───────────────────────────────────────── */
 .list-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); }
 
 .meal-row { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r14); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; border: 0.5px solid var(--border); }
@@ -262,7 +261,7 @@ img { display: block; }
 .meal-del svg { width: 16px; height: 16px; stroke: var(--text3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .meal-del:active svg { stroke: var(--red); }
 
-/* ── Shopping ─────────────────────────────────────────────────── */
+/* ── Shopping (week-based) ────────────────────────────────────── */
 .shop-section { margin-bottom: 28px; }
 .shop-sec-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
 .shop-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
@@ -275,6 +274,136 @@ img { display: block; }
 .ing-card-check.checked { background: var(--green); border-color: var(--green); }
 .ing-card-check svg { display: none; width: 9px; height: 9px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .ing-card-check.checked svg { display: block; }
+.hide-checked-btn { padding: 7px 14px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--card); color: var(--text2); font-size: 12px; font-weight: 600; transition: all .15s; }
+.hide-checked-btn.active { background: var(--green-bg); color: var(--green-mid); border-color: var(--green-light); }
+.shop-toggle-row { display: flex; align-items: center; justify-content: flex-end; padding: 10px 16px 4px; flex-shrink: 0; }
+
+/* ── This Week screen ────────────────────────────────────────── */
+#week-header { flex-shrink: 0; background: var(--card); border-bottom: 0.5px solid var(--border); }
+.week-nav-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 10px;
+  gap: 8px;
+}
+.week-nav-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid var(--border);
+  background: var(--bg); display: flex; align-items: center; justify-content: center;
+  color: var(--text2); flex-shrink: 0; transition: background .15s;
+}
+.week-nav-btn:active { background: var(--card2); }
+.week-nav-btn:disabled { opacity: .3; cursor: default; }
+.week-nav-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.week-center { flex: 1; text-align: center; }
+.week-label { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; line-height: 1.2; }
+.week-sublabel { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.week-add-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: var(--green); display: flex; align-items: center; justify-content: center;
+  color: #fff; flex-shrink: 0;
+}
+.week-add-btn:active { opacity: .8; }
+.week-add-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.week-mode-row { display: flex; gap: 0; padding: 0 16px 12px; }
+.week-mode-btn {
+  flex: 1; padding: 8px 0; border: 0.5px solid var(--border); background: var(--bg);
+  color: var(--text2); font-size: 13px; font-weight: 600; transition: all .15s;
+}
+.week-mode-btn:first-child { border-radius: var(--r10) 0 0 var(--r10); border-right: none; }
+.week-mode-btn:last-child  { border-radius: 0 var(--r10) var(--r10) 0; }
+.week-mode-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+.reuse-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--green-bg); border: 0.5px solid var(--green-light);
+  border-radius: var(--r14); padding: 10px 14px; margin: 0 16px 10px; flex-shrink: 0;
+}
+.reuse-banner-text { font-size: 13px; color: var(--green-mid); font-weight: 500; }
+.reuse-banner-btn {
+  padding: 6px 14px; border-radius: 20px; border: none;
+  background: var(--green); color: #fff; font-size: 12px; font-weight: 600; flex-shrink: 0;
+}
+.reuse-banner-btn:active { opacity: .8; }
+.week-plan-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); }
+.week-shop-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 16px calc(96px + env(safe-area-inset-bottom)); }
+
+/* ── Me screen ──────────────────────────────────────────────── */
+#me-header { flex-shrink: 0; background: var(--card); border-bottom: 0.5px solid var(--border); }
+.me-topbar { padding: calc(14px + env(safe-area-inset-top)) 16px 14px; }
+.me-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+.me-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 20px; }
+.me-section { }
+.me-section-hd { font-size: 10px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+.auth-card {
+  background: var(--card); border-radius: var(--r20); border: 0.5px solid var(--border);
+  padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+}
+.auth-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--card2); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.auth-avatar svg { width: 28px; height: 28px; stroke: var(--text3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.auth-title { font-size: 16px; font-weight: 600; }
+.auth-sub { font-size: 13px; color: var(--text2); }
+.auth-btn { padding: 10px 28px; border-radius: var(--r10); background: var(--card2); color: var(--text2); border: 0.5px solid var(--border); font-size: 13px; font-weight: 600; opacity: .6; cursor: default; }
+.pref-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--card); border-radius: var(--r14); border: 0.5px solid var(--border);
+  padding: 12px 14px; margin-bottom: 8px;
+}
+.pref-left { display: flex; flex-direction: column; gap: 1px; }
+.pref-label { font-size: 14px; font-weight: 500; }
+.pref-sub { font-size: 12px; color: var(--text2); }
+.pref-seg { display: flex; background: var(--bg); border: 0.5px solid var(--border); border-radius: 20px; overflow: hidden; height: 30px; }
+.pref-seg .seg-btn { padding: 0 12px; font-size: 11px; }
+
+/* ── Recipe Picker Sheet ─────────────────────────────────────── */
+.picker-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  z-index: 200; display: none; backdrop-filter: blur(2px);
+}
+.picker-backdrop.open { display: block; }
+.picker-sheet {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+  width: 100%; max-width: 430px; height: 85vh;
+  background: var(--card); border-radius: 20px 20px 0 0;
+  z-index: 201; display: flex; flex-direction: column;
+  transition: transform .35s cubic-bezier(.19,1,.22,1);
+  overflow: hidden;
+}
+.picker-sheet.open { transform: translateX(-50%) translateY(0); }
+.picker-handle { width: 36px; height: 4px; background: var(--text3); border-radius: 2px; margin: 10px auto 0; flex-shrink: 0; }
+.picker-hd { padding: 12px 16px 10px; flex-shrink: 0; }
+.picker-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+.picker-search-inner { position: relative; }
+.picker-search-inner svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--text3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.picker-search { width: 100%; padding: 9px 12px 9px 32px; border-radius: var(--r10); border: 0.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; }
+.picker-search:focus { border-color: var(--green); }
+.picker-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 16px 20px; }
+.picker-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card); border-radius: var(--r14); border: 0.5px solid var(--border);
+  padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: all .15s;
+}
+.picker-item:active { opacity: .85; }
+.picker-item.in-week { border-color: var(--green); border-width: 1.5px; background: var(--green-bg); }
+.picker-item-img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--card2); flex-shrink: 0; }
+.picker-item-info { flex: 1; min-width: 0; }
+.picker-item-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.picker-item-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.picker-check {
+  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
+}
+.picker-item.in-week .picker-check { background: var(--green); border-color: var(--green); }
+.picker-check svg { display: none; width: 11px; height: 11px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.picker-item.in-week .picker-check svg { display: block; }
+
+/* ── Scroll browse mode ──────────────────────────────────────── */
+.scroll-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 14px calc(96px + env(safe-area-inset-bottom)); display: none; flex-direction: column; gap: 8px; }
+.scroll-list.active { display: flex; }
+.scroll-recipe { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r14); border: 0.5px solid var(--border); padding: 10px; cursor: pointer; }
+.scroll-recipe:active { opacity: .85; }
+.scroll-recipe-img { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; background: var(--card2); flex-shrink: 0; }
+.scroll-recipe-info { flex: 1; min-width: 0; }
+.scroll-recipe-name { font-weight: 600; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
+.scroll-recipe-meta { font-size: 11px; color: var(--text2); }
 
 /* ── Toast ───────────────────────────────────────────────────── */
 .toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--card); color: var(--text); border: 0.5px solid var(--border); padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .28s cubic-bezier(.19,1,.22,1); z-index: 9999; white-space: nowrap; box-shadow: var(--shadow); }
@@ -289,60 +418,46 @@ img { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .pop-in { animation: popIn .22s cubic-bezier(.19,1,.22,1); }
 @keyframes popIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
-
-/* ── Scroll browse mode ────────────────────────────────────── */
-.scroll-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 14px calc(96px + env(safe-area-inset-bottom)); display: none; flex-direction: column; gap: 8px; }
-.scroll-list.active { display: flex; }
-.scroll-recipe { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r14); border: 0.5px solid var(--border); padding: 10px; cursor: pointer; }
-.scroll-recipe:active { opacity: .85; }
-.scroll-recipe-img { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; background: var(--card2); flex-shrink: 0; }
-.scroll-recipe-info { flex: 1; min-width: 0; }
-.scroll-recipe-name { font-weight: 600; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
-.scroll-recipe-meta { font-size: 11px; color: var(--text2); }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- SHARED HEADER — always visible except on detail -->
-  <div id="shared-header">
-    <div class="topbar-row">
-      <div class="topbar-left">
-        <span class="app-title">Cookbook</span>
-        <span id="count-pill">Loading...</span>
-      </div>
-      <div class="topbar-right">
-        <div class="seg-group">
-          <button class="seg-btn" id="seg-theme" onclick="toggleTheme()">
-            <svg id="seg-theme-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            <svg id="seg-theme-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </button>
-          <button class="seg-btn" id="seg-units" onclick="toggleUnits()">US</button>
-          <button class="seg-btn" id="seg-layout" onclick="toggleBrowseMode()">
-            <svg id="seg-layout-swipe" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <svg id="seg-layout-scroll" viewBox="0 0 24 24" style="display:none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+  <!-- ═══════════════ RECIPES SCREEN ═══════════════ -->
+  <div id="recipes-screen" class="screen active">
+    <div id="recipes-header">
+      <div class="topbar-row">
+        <div class="topbar-left">
+          <span class="app-title">Cookbook</span>
+          <span id="count-pill">Loading...</span>
+        </div>
+        <div class="topbar-right">
+          <div class="seg-group">
+            <button class="seg-btn" id="seg-theme" onclick="toggleTheme()">
+              <svg id="seg-theme-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <svg id="seg-theme-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button class="seg-btn" id="seg-units" onclick="toggleUnits()">US</button>
+            <button class="seg-btn" id="seg-layout" onclick="toggleBrowseMode()">
+              <svg id="seg-layout-swipe" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <svg id="seg-layout-scroll" viewBox="0 0 24 24" style="display:none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
+          <button class="icon-btn" id="search-toggle-btn" onclick="toggleSearch()">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
         </div>
-        <button class="icon-btn" id="search-toggle-btn" onclick="toggleSearch()">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
       </div>
-    </div>
-  </div>
-
-  <!-- SEARCH BAR (under shared header) -->
-  <div class="search-bar" id="search-bar">
-    <div class="search-inner">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" id="search-input" placeholder="Search any recipe..." oninput="onSearch(this.value)" autocomplete="off" spellcheck="false">
-      <button class="search-clear" id="search-clear" onclick="clearSearch()">&#x2715;</button>
-    </div>
-  </div>
-
-  <!-- RECIPES -->
-  <div id="recipes-screen" class="screen active">
-    <div class="filter-row" id="filter-row">
-      <span class="fpill active" data-q="" onclick="filterBy(this)">All</span>
+      <div class="search-bar" id="search-bar">
+        <div class="search-inner">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-input" placeholder="Search any recipe..." oninput="onSearch(this.value)" autocomplete="off" spellcheck="false">
+          <button class="search-clear" id="search-clear" onclick="clearSearch()">&#x2715;</button>
+        </div>
+      </div>
+      <div class="filter-row" id="filter-row">
+        <span class="fpill active" data-q="" onclick="filterBy(this)">All</span>
+      </div>
     </div>
     <div class="swipe-area" id="swipe-area">
       <div class="card-stack" id="card-stack">
@@ -353,31 +468,98 @@ img { display: block; }
     <div class="scroll-list" id="scroll-list"></div>
   </div>
 
-  <!-- SAVED -->
-  <div id="saved-screen" class="screen">
-    <div class="screen-subheader">
-      <span class="screen-title">Saved</span>
-      <span class="screen-sub" id="saved-count">0 recipes</span>
-    </div>
-    <div class="list-body" id="saved-list"></div>
-  </div>
-
-  <!-- SHOPPING -->
-  <div id="shopping-screen" class="screen">
-    <div class="screen-subheader">
-      <span class="screen-title">Shopping</span>
-      <span class="screen-sub" id="shop-count"></span>
-    </div>
-    <div class="list-body">
-      <div class="shop-toolbar">
-        <button class="shop-btn" onclick="checkAllShop()">Check all</button>
-        <button class="shop-btn shop-btn-clear" onclick="clearChecked()">Remove checked</button>
+  <!-- ═══════════════ THIS WEEK SCREEN ═══════════════ -->
+  <div id="week-screen" class="screen">
+    <div id="week-header">
+      <div class="week-nav-row">
+        <button class="week-nav-btn" id="week-prev-btn" onclick="changeWeek(-1)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="week-center">
+          <p class="week-label" id="week-label-text">This Week</p>
+          <p class="week-sublabel" id="week-range-text"></p>
+        </div>
+        <button class="week-nav-btn" id="week-next-btn" onclick="changeWeek(1)">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="week-add-btn" id="week-add-btn" onclick="openPicker()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
       </div>
-      <div id="shop-list"></div>
+      <div class="week-mode-row">
+        <button class="week-mode-btn active" id="week-mode-plan" onclick="setWeekMode('plan')">Plan</button>
+        <button class="week-mode-btn" id="week-mode-shop" onclick="setWeekMode('shop')">Shop</button>
+      </div>
+    </div>
+    <!-- Plan view -->
+    <div id="week-plan-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div id="week-reuse-banner" style="display:none" class="reuse-banner">
+        <span class="reuse-banner-text">Reuse meals for This Week?</span>
+        <button class="reuse-banner-btn" onclick="reusePastWeek()">Reuse</button>
+      </div>
+      <div class="week-plan-body" id="week-plan-body"></div>
+    </div>
+    <!-- Shop view -->
+    <div id="week-shop-view" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div class="shop-toggle-row">
+        <button class="hide-checked-btn" id="hide-checked-btn" onclick="toggleHideChecked()">Hide checked</button>
+      </div>
+      <div class="week-shop-body" id="week-shop-body"></div>
     </div>
   </div>
 
-  <!-- DETAIL (fixed overlay — outside normal flow) -->
+  <!-- ═══════════════ ME SCREEN ═══════════════ -->
+  <div id="me-screen" class="screen">
+    <div id="me-header">
+      <div class="me-topbar">
+        <p class="me-title">Me</p>
+      </div>
+    </div>
+    <div class="me-scroll">
+      <!-- Auth card -->
+      <div class="me-section">
+        <div class="auth-card">
+          <div class="auth-avatar">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <p class="auth-title">Welcome</p>
+          <p class="auth-sub">Sign in to sync your recipes across devices</p>
+          <button class="auth-btn" disabled>Sign in coming soon</button>
+        </div>
+      </div>
+      <!-- Saved recipes -->
+      <div class="me-section">
+        <p class="me-section-hd">Saved Recipes</p>
+        <div id="me-saved-list"></div>
+      </div>
+      <!-- Preferences -->
+      <div class="me-section">
+        <p class="me-section-hd">Preferences</p>
+        <div class="pref-row">
+          <div class="pref-left">
+            <span class="pref-label">Units</span>
+            <span class="pref-sub">Measurement system</span>
+          </div>
+          <div class="pref-seg seg-group">
+            <button class="seg-btn" id="pref-units-us" onclick="setUnits(false)">US</button>
+            <button class="seg-btn" id="pref-units-metric" onclick="setUnits(true)">Metric</button>
+          </div>
+        </div>
+        <div class="pref-row">
+          <div class="pref-left">
+            <span class="pref-label">Browse Mode</span>
+            <span class="pref-sub">How to browse recipes</span>
+          </div>
+          <div class="pref-seg seg-group">
+            <button class="seg-btn" id="pref-mode-swipe" onclick="setBrowseMode('swipe')">Swipe</button>
+            <button class="seg-btn" id="pref-mode-scroll" onclick="setBrowseMode('scroll')">Scroll</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ DETAIL OVERLAY ═══════════════ -->
   <div id="detail-screen" class="screen">
     <div class="detail-hero">
       <button class="detail-back" onclick="closeDetail()">
@@ -394,7 +576,7 @@ img { display: block; }
     </div>
   </div>
 
-</div>
+</div><!-- /#app -->
 
 <!-- BOTTOM NAV — outside #app so backdrop-filter works -->
 <nav id="bottom-nav">
@@ -402,15 +584,29 @@ img { display: block; }
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Recipes
   </button>
-  <button class="nav-btn" id="tab-saved" onclick="switchTab('saved')">
-    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-    Saved
+  <button class="nav-btn" id="tab-week" onclick="switchTab('week')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    This Week
   </button>
-  <button class="nav-btn" id="tab-shopping" onclick="switchTab('shopping')">
-    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-    Shopping
+  <button class="nav-btn" id="tab-me" onclick="switchTab('me')">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Me
   </button>
 </nav>
+
+<!-- PICKER SHEET — outside #app to avoid overflow:hidden clipping -->
+<div class="picker-backdrop" id="picker-backdrop" onclick="closePicker()"></div>
+<div class="picker-sheet" id="picker-sheet">
+  <div class="picker-handle"></div>
+  <div class="picker-hd">
+    <p class="picker-title" id="picker-title">Add to This Week</p>
+    <div class="picker-search-inner">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="picker-search" id="picker-search" placeholder="Search recipes..." oninput="onPickerSearch(this.value)" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+  <div class="picker-list" id="picker-list"></div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -419,16 +615,112 @@ img { display: block; }
 
 const STEP_LABELS = ['Prep','Cook','Simmer','Combine','Season','Finish','Rest','Serve'];
 
-/* ── State ── */
+/* ── State ────────────────────────────────────────────────────── */
 let allRecipes = [], queue = [], qIdx = 0, isLoading = false;
 let savedList  = load('cb_saved', []);
-let shopItems  = load('cb_shop',  []);
-let currentDetailId = null, prevScreen = 'recipes', currentQ = '';
+let shopItems  = load('cb_shop',  []);   // kept for backwards compat, not used for week shop
+let currentDetailId = null;
 let searchActive = false, searchTimeout = null;
-let browseMode = localStorage.getItem('cb_browse_mode') || 'swipe'; // 'swipe' | 'scroll'
+let browseMode = localStorage.getItem('cb_browse_mode') || 'swipe';
 let useMetric  = localStorage.getItem('cb_units') === 'metric';
+let currentQ   = '';
 
-/* ── Unit conversion ── */
+// v3 state
+let viewingWeekKey = '';
+let weekMode = 'plan';
+let hideChecked = false;
+let currentTab = 'recipes';
+let pickerSearchVal = '';
+
+/* ── Week helpers ─────────────────────────────────────────────── */
+function isoWeekKey(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+}
+
+function currentWeekKey() {
+  return isoWeekKey(new Date());
+}
+
+function weekKeyOffset(key, delta) {
+  const start = weekKeyStart(key);
+  start.setDate(start.getDate() + delta * 7);
+  return isoWeekKey(start);
+}
+
+function weekKeyStart(key) {
+  // key = 'YYYY-Www'
+  const [year, wStr] = key.split('-W');
+  const y = parseInt(year, 10), w = parseInt(wStr, 10);
+  // Jan 4 is always in week 1
+  const jan4 = new Date(Date.UTC(y, 0, 4));
+  const day4 = jan4.getUTCDay() || 7;
+  const week1Monday = new Date(jan4);
+  week1Monday.setUTCDate(jan4.getUTCDate() - day4 + 1);
+  const monday = new Date(week1Monday);
+  monday.setUTCDate(week1Monday.getUTCDate() + (w - 1) * 7);
+  return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
+}
+
+function weekLabel(key) {
+  const cwk = currentWeekKey();
+  if (key === cwk) return 'This Week';
+  if (key === weekKeyOffset(cwk, 1)) return 'Next Week';
+  if (key < cwk) return 'Week of';
+  return 'Week of';
+}
+
+function weekRange(key) {
+  const start = weekKeyStart(key);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const mo = (d) => d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  return `${mo(start)} – ${end.getDate()}`;
+}
+
+function isPastWeek(key) {
+  return key < currentWeekKey();
+}
+
+function getWeekPlan(key) {
+  return load(`cb_week_${key}`, []);
+}
+
+function saveWeekPlan(key, plan) {
+  try { localStorage.setItem(`cb_week_${key}`, JSON.stringify(plan)); } catch(_) {}
+}
+
+function getShopChecked(key) {
+  return load(`cb_shopchecked_${key}`, {});
+}
+
+function saveShopChecked(key, obj) {
+  try { localStorage.setItem(`cb_shopchecked_${key}`, JSON.stringify(obj)); } catch(_) {}
+}
+
+function isInWeek(id, key) {
+  return getWeekPlan(key).some(r => r.id === id);
+}
+
+function addToWeek(recipe) {
+  const key = currentWeekKey();
+  const plan = getWeekPlan(key);
+  if (!plan.find(r => r.id === recipe.id)) {
+    plan.push({ id: recipe.id, name: recipe.name, image: recipe.imageThumb || recipe.image || '', cuisine: recipe.cuisine || '' });
+    saveWeekPlan(key, plan);
+  }
+}
+
+function removeFromWeek(id, key) {
+  const plan = getWeekPlan(key).filter(r => r.id !== id);
+  saveWeekPlan(key, plan);
+}
+
+/* ── Unit conversion ──────────────────────────────────────────── */
 const METRIC = {
   'oz':{'f':28.35,'u':'g'},'ounce':{'f':28.35,'u':'g'},'ounces':{'f':28.35,'u':'g'},
   'fl oz':{'f':29.57,'u':'ml'},'fluid ounce':{'f':29.57,'u':'ml'},
@@ -438,35 +730,58 @@ const METRIC = {
   'lb':{'f':453.6,'u':'g'},'pound':{'f':453.6,'u':'g'},'pounds':{'f':453.6,'u':'g'},
   'quart':{'f':946,'u':'ml'},'gallon':{'f':3785,'u':'ml'},
 };
-function fmtQty(amount, unit){
+
+function fmtQty(amount, unit) {
   const a = String(amount||'').trim(), u = String(unit||'').trim();
-  if(!useMetric || !a || !u) return `${a} ${u}`.trim();
+  if (!useMetric || !a || !u) return `${a} ${u}`.trim();
   const conv = METRIC[u.toLowerCase()];
-  if(!conv) return `${a} ${u}`.trim();
-  const num = parseFloat(a); if(isNaN(num)) return `${a} ${u}`.trim();
+  if (!conv) return `${a} ${u}`.trim();
+  const num = parseFloat(a); if (isNaN(num)) return `${a} ${u}`.trim();
   let val = num * conv.f, ou = conv.u;
-  if(ou==='ml' && val>=1000){ val/=1000; ou='L'; }
-  if(ou==='g'  && val>=1000){ val/=1000; ou='kg'; }
+  if (ou==='ml' && val>=1000) { val/=1000; ou='L'; }
+  if (ou==='g'  && val>=1000) { val/=1000; ou='kg'; }
   const r = val>=100 ? Math.round(val) : val>=10 ? Math.round(val*10)/10 : Math.round(val*100)/100;
   return `${r} ${ou}`;
 }
-function toggleUnits(){
+
+function toggleUnits() {
   useMetric = !useMetric;
   localStorage.setItem('cb_units', useMetric ? 'metric' : 'us');
+  syncUnitsUI();
+  if (document.getElementById('detail-screen').classList.contains('active')) openDetail(currentDetailId);
+  if (currentTab === 'week' && weekMode === 'shop') renderWeekShop();
+}
+
+function setUnits(metric) {
+  useMetric = metric;
+  localStorage.setItem('cb_units', useMetric ? 'metric' : 'us');
+  syncUnitsUI();
+  if (document.getElementById('detail-screen').classList.contains('active')) openDetail(currentDetailId);
+  if (currentTab === 'week' && weekMode === 'shop') renderWeekShop();
+}
+
+function syncUnitsUI() {
   const btn = document.getElementById('seg-units');
   btn.textContent = useMetric ? 'Metric' : 'US';
   btn.classList.toggle('on', useMetric);
-  if(document.getElementById('detail-screen').style.display==='flex') openDetail(currentDetailId);
-  renderShop();
+  document.getElementById('pref-units-us').classList.toggle('on', !useMetric);
+  document.getElementById('pref-units-metric').classList.toggle('on', useMetric);
 }
 
-/* ── Browse mode toggle ── */
-function toggleBrowseMode(){
+/* ── Browse mode ─────────────────────────────────────────────── */
+function toggleBrowseMode() {
   browseMode = browseMode === 'swipe' ? 'scroll' : 'swipe';
   localStorage.setItem('cb_browse_mode', browseMode);
   applyBrowseMode();
 }
-function applyBrowseMode(){
+
+function setBrowseMode(mode) {
+  browseMode = mode;
+  localStorage.setItem('cb_browse_mode', browseMode);
+  applyBrowseMode();
+}
+
+function applyBrowseMode() {
   const isScroll = browseMode === 'scroll';
   document.getElementById('swipe-area').style.display  = isScroll ? 'none' : '';
   document.getElementById('swipe-hint').style.display  = isScroll ? 'none' : '';
@@ -474,14 +789,17 @@ function applyBrowseMode(){
   document.getElementById('seg-layout').classList.toggle('on', isScroll);
   document.getElementById('seg-layout-swipe').style.display  = isScroll ? 'none'  : 'block';
   document.getElementById('seg-layout-scroll').style.display = isScroll ? 'block' : 'none';
-  if(isScroll) renderScrollList();
+  document.getElementById('pref-mode-swipe').classList.toggle('on', !isScroll);
+  document.getElementById('pref-mode-scroll').classList.toggle('on', isScroll);
+  if (isScroll) renderScrollList();
 }
-function renderScrollList(){
+
+function renderScrollList() {
   const el = document.getElementById('scroll-list');
-  const items = queue.slice(qIdx); // show remaining unswipped recipes
-  if(!items.length){ el.innerHTML='<div class="center-state"><p class="state-title">All caught up</p></div>'; return; }
+  const items = queue.slice(qIdx);
+  if (!items.length) { el.innerHTML='<div class="center-state"><p class="state-title">All caught up</p></div>'; return; }
   el.innerHTML = items.map(r => {
-    const isSaved = !!savedList.find(x=>x.id===r.id);
+    const isSaved = !!savedList.find(x => x.id === r.id);
     return `<div class="scroll-recipe" onclick="openDetail('${r.id}')">
       <img class="scroll-recipe-img" src="${r.imageThumb||r.image||''}" alt="${r.name}" loading="lazy">
       <div class="scroll-recipe-info">
@@ -495,73 +813,72 @@ function renderScrollList(){
   }).join('');
 }
 
-/* ── Theme ── */
-function applyTheme(t){
+/* ── Theme ───────────────────────────────────────────────────── */
+function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   document.getElementById('seg-theme-sun').style.display  = t === 'dark'  ? 'block' : 'none';
   document.getElementById('seg-theme-moon').style.display = t === 'light' ? 'block' : 'none';
 }
-(function initTheme(){ applyTheme(localStorage.getItem('cb_theme') || 'dark'); })();
+(function initTheme() { applyTheme(localStorage.getItem('cb_theme') || 'dark'); })();
 
-function toggleTheme(){
+function toggleTheme() {
   const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   localStorage.setItem('cb_theme', next);
   applyTheme(next);
 }
 
-/* ── Persistence ── */
-function load(k,d){ try{ return JSON.parse(localStorage.getItem(k))||d; }catch{ return d; } }
-function persist(){
-  try{
+/* ── Persistence ─────────────────────────────────────────────── */
+function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } }
+function persist() {
+  try {
     localStorage.setItem('cb_saved', JSON.stringify(savedList));
     localStorage.setItem('cb_shop',  JSON.stringify(shopItems));
-  }catch{}
+  } catch(_) {}
 }
 
-/* ── API ── */
-async function fetchPage(q, page){
+/* ── API ─────────────────────────────────────────────────────── */
+async function fetchPage(q, page) {
   const params = new URLSearchParams({ page });
-  if(q && q!=='All') params.set('cuisine', q);
+  if (q && q !== 'All') params.set('cuisine', q);
   const r = await fetch(`/api/recipes?${params}`);
   return r.json();
 }
-async function fetchDetail(id){ const r = await fetch(`/api/recipe/${id}`); return r.json(); }
-async function fetchImg(imgUrl){ const r = await fetch(`/api/img?url=${encodeURIComponent(imgUrl)}`); const d = await r.json(); return d.dataUrl||''; }
+async function fetchDetail(id) { const r = await fetch(`/api/recipe/${id}`); return r.json(); }
+async function fetchImg(imgUrl) { const r = await fetch(`/api/img?url=${encodeURIComponent(imgUrl)}`); const d = await r.json(); return d.dataUrl || ''; }
 
 const imgCache = new Map();
-async function getImg(url){
-  if(!url) return '';
-  if(imgCache.has(url)) return imgCache.get(url);
-  const d = await fetchImg(url).catch(()=>'');
-  if(d) imgCache.set(url, d);
+async function getImg(url) {
+  if (!url) return '';
+  if (imgCache.has(url)) return imgCache.get(url);
+  const d = await fetchImg(url).catch(() => '');
+  if (d) imgCache.set(url, d);
   return d;
 }
 
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr; }
+function shuffle(arr) { for (let i=arr.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 
-function setPill(loaded, total){
+function setPill(loaded, total) {
   const pill = document.getElementById('count-pill');
   pill.textContent = loaded < total ? `${loaded} / ${total}` : `${loaded} recipes`;
 }
 
-async function loadCuisines(){
-  try{
+async function loadCuisines() {
+  try {
     const r = await fetch('/api/cuisines');
     const d = await r.json();
     const row = document.getElementById('filter-row');
-    const pills = (d.cuisines||[]).map(c=>`<span class="fpill" data-q="${c}" onclick="filterBy(this)">${c}</span>`).join('');
+    const pills = (d.cuisines||[]).map(c => `<span class="fpill" data-q="${c}" onclick="filterBy(this)">${c}</span>`).join('');
     row.innerHTML = `<span class="fpill active" data-q="" onclick="filterBy(this)">All</span>${pills}`;
-  }catch(_){}
+  } catch(_) {}
 }
 
-/* ── Load recipes ── */
-async function loadRecipes(q=''){
-  if(isLoading) return;
+/* ── Load recipes ─────────────────────────────────────────────── */
+async function loadRecipes(q='') {
+  if (isLoading) return;
   isLoading = true;
   allRecipes = []; queue = []; qIdx = 0;
   setStack('<div class="center-state"><div class="spinner"></div></div>');
-  try{
-    // Load first page — renders cards immediately
+  try {
     const first = await fetchPage(q, 0);
     const total = first.total || 0;
     allRecipes = first.items || [];
@@ -569,21 +886,20 @@ async function loadRecipes(q=''){
     queue = [...allRecipes];
     qIdx = 0;
     setPill(allRecipes.length, total);
-    if(browseMode==='scroll') renderScrollList(); else renderCards();
+    if (browseMode==='scroll') renderScrollList(); else renderCards();
     isLoading = false;
 
-    // Stream remaining pages in background, shuffle each batch in
     const pages = Math.ceil(total / 20);
-    for(let p = 1; p < pages; p++){
+    for (let p = 1; p < pages; p++) {
       const data = await fetchPage(q, p);
       const newItems = shuffle(data.items || []);
       allRecipes.push(...newItems);
       queue.push(...newItems);
       setPill(allRecipes.length, total);
-      if(browseMode==='scroll') renderScrollList();
+      if (browseMode==='scroll') renderScrollList();
     }
     setPill(allRecipes.length, allRecipes.length);
-  }catch(e){
+  } catch(e) {
     setStack(`<div class="center-state">
       <p class="state-title">Could not connect</p>
       <p class="state-sub">Make sure the server is running.<br><code style="font-size:11px;background:var(--card2);padding:2px 6px;border-radius:4px">node server.js</code></p>
@@ -592,24 +908,24 @@ async function loadRecipes(q=''){
   }
 }
 
-/* ── Cards ── */
-function setStack(html){ document.getElementById('card-stack').innerHTML=html; }
+/* ── Cards ───────────────────────────────────────────────────── */
+function setStack(html) { document.getElementById('card-stack').innerHTML = html; }
 
-function renderCards(){
+function renderCards() {
   const visible = queue.slice(qIdx, qIdx+3);
-  if(!visible.length){
+  if (!visible.length) {
     setStack(`<div class="center-state"><p class="state-title">All caught up</p><p class="state-sub">Try a different cuisine or check your saved recipes.</p></div>`);
-    document.getElementById('swipe-hint').style.opacity='0';
+    document.getElementById('swipe-hint').style.opacity = '0';
     return;
   }
-  document.getElementById('swipe-hint').style.opacity='1';
+  document.getElementById('swipe-hint').style.opacity = '1';
   const stack = document.getElementById('card-stack');
-  stack.innerHTML='';
-  visible.slice().reverse().forEach((r,ri)=>{
-    const pos = visible.length-1-ri;
-    const isSaved = !!savedList.find(x=>x.id===r.id);
+  stack.innerHTML = '';
+  visible.slice().reverse().forEach((r, ri) => {
+    const pos = visible.length - 1 - ri;
+    const isSaved = !!savedList.find(x => x.id === r.id);
     const card = document.createElement('div');
-    card.className = 'recipe-card'+(pos===0?' card-top pop-in':` card-back-${pos}`);
+    card.className = 'recipe-card' + (pos===0 ? ' card-top pop-in' : ` card-back-${pos}`);
     card.id = `card-${r.id}`;
     card.innerHTML = `
       <div class="card-hero">
@@ -626,7 +942,7 @@ function renderCards(){
       </div>
       <div class="card-body">
         <p class="card-title">${r.name}</p>
-        ${r.headline?`<p class="card-headline">${r.headline}</p>`:''}
+        ${r.headline ? `<p class="card-headline">${r.headline}</p>` : ''}
         <div class="card-quick">
           <div class="qitem"><strong>${r.difficulty||'—'}</strong>Difficulty</div>
           <div class="qitem"><strong>${r.servings||'—'}</strong>Servings</div>
@@ -637,95 +953,94 @@ function renderCards(){
           <button class="btn btn-view" onclick="openDetail('${r.id}')">View Recipe</button>
         </div>
       </div>`;
-    if(pos===0) attachSwipe(card, r.id);
+    if (pos === 0) attachSwipe(card, r.id);
     stack.appendChild(card);
   });
 }
 
-/* ── Swipe ── */
-function attachSwipe(card, id){
-  let startX=0,startY=0,dx=0,dragging=false,moved=false;
-  const ss=card.querySelector('.sov-save'), sk=card.querySelector('.sov-skip');
-  const onStart=(x,y)=>{ startX=x;startY=y;dragging=true;moved=false;card.style.transition='none'; };
-  const onMove=(x,y)=>{
-    if(!dragging) return;
-    const ddx=x-startX,ddy=y-startY;
-    if(!moved&&Math.abs(ddy)>Math.abs(ddx)+8){dragging=false;return;}
+/* ── Swipe ───────────────────────────────────────────────────── */
+function attachSwipe(card, id) {
+  let startX=0, startY=0, dx=0, dragging=false, moved=false;
+  const ss = card.querySelector('.sov-save'), sk = card.querySelector('.sov-skip');
+  const onStart = (x, y) => { startX=x; startY=y; dragging=true; moved=false; card.style.transition='none'; };
+  const onMove  = (x, y) => {
+    if (!dragging) return;
+    const ddx=x-startX, ddy=y-startY;
+    if (!moved && Math.abs(ddy) > Math.abs(ddx)+8) { dragging=false; return; }
     moved=true; dx=ddx;
-    card.style.transform=`translateX(${dx}px) rotate(${dx*.03}deg)`;
-    const p=Math.min(Math.abs(dx)/90,1);
-    ss.style.opacity=dx>20?p:0; sk.style.opacity=dx<-20?p:0;
+    card.style.transform = `translateX(${dx}px) rotate(${dx*.03}deg)`;
+    const p = Math.min(Math.abs(dx)/90, 1);
+    ss.style.opacity = dx>20 ? p : 0; sk.style.opacity = dx<-20 ? p : 0;
   };
-  const onEnd=(e)=>{
-    if(!dragging) return; dragging=false; card.style.transition='';
-    if(dx>90) saveCard(id);
-    else if(dx<-90) skipCard(id);
-    else{
-      card.style.transform='';ss.style.opacity=0;sk.style.opacity=0;
-      // Tap (no significant drag) on non-button area → open detail
-      const tgt=e&&(e.changedTouches?e.changedTouches[0].target:e.target);
-      if(!moved && tgt && !tgt.closest('button')) openDetail(id);
+  const onEnd = (e) => {
+    if (!dragging) return; dragging=false; card.style.transition='';
+    if      (dx >  90) saveCard(id);
+    else if (dx < -90) skipCard(id);
+    else {
+      card.style.transform=''; ss.style.opacity=0; sk.style.opacity=0;
+      const tgt = e && (e.changedTouches ? e.changedTouches[0].target : e.target);
+      if (!moved && tgt && !tgt.closest('button')) openDetail(id);
     }
-    dx=0;
+    dx = 0;
   };
-  card.addEventListener('mousedown',e=>onStart(e.clientX,e.clientY));
-  window.addEventListener('mousemove',e=>{ if(dragging) onMove(e.clientX,e.clientY); });
-  window.addEventListener('mouseup',onEnd);
-  card.addEventListener('touchstart',e=>onStart(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
-  card.addEventListener('touchmove',e=>{ if(dragging&&moved) e.preventDefault(); onMove(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
-  card.addEventListener('touchend',onEnd,{passive:true});
+  card.addEventListener('mousedown',  e => onStart(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX, e.clientY); });
+  window.addEventListener('mouseup',   onEnd);
+  card.addEventListener('touchstart',  e => onStart(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
+  card.addEventListener('touchmove',   e => { if (dragging&&moved) e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+  card.addEventListener('touchend',    onEnd, {passive:true});
 }
 
-function animOut(id,dir,cb){
-  const c=document.getElementById(`card-${id}`); if(!c){cb();return;}
-  c.classList.add(dir==='r'?'swipe-out-r':'swipe-out-l'); setTimeout(cb,300);
+function animOut(id, dir, cb) {
+  const c = document.getElementById(`card-${id}`); if (!c) { cb(); return; }
+  c.classList.add(dir==='r' ? 'swipe-out-r' : 'swipe-out-l'); setTimeout(cb, 300);
 }
-function skipCard(id){ animOut(id,'l',()=>{qIdx++;renderCards();}); }
-function saveCard(id){
-  const r=queue[qIdx]; if(r&&r.id===id&&!savedList.find(x=>x.id===id)){savedList.push(r);persist();toast('Saved to collection');}
-  animOut(id,'r',()=>{qIdx++;renderCards();});
+function skipCard(id) { animOut(id, 'l', () => { qIdx++; renderCards(); }); }
+function saveCard(id) {
+  const r = queue[qIdx]; if (r && r.id===id && !savedList.find(x=>x.id===id)) { savedList.push(r); persist(); toast('Saved to collection'); }
+  animOut(id, 'r', () => { qIdx++; renderCards(); });
 }
-function quickSave(id,btn){
-  const r=allRecipes.find(x=>x.id===id); if(!r) return;
-  const idx=savedList.findIndex(x=>x.id===id);
-  if(idx>=0){savedList.splice(idx,1);btn.classList.remove('saved');toast('Removed from saved');}
-  else{savedList.push(r);btn.classList.add('saved');toast('Saved to collection');}
+function quickSave(id, btn) {
+  const r = allRecipes.find(x => x.id===id); if (!r) return;
+  const idx = savedList.findIndex(x => x.id===id);
+  if (idx>=0) { savedList.splice(idx,1); btn.classList.remove('saved'); toast('Removed from saved'); }
+  else        { savedList.push(r); btn.classList.add('saved'); toast('Saved to collection'); }
   persist();
 }
 
-/* ── Detail ── */
-async function openDetail(id, from){
-  if(from) prevScreen=from;
-  currentDetailId=id;
-  // Show detail as fixed overlay
-  const ds=document.getElementById('detail-screen');
-  ds.style.display='flex';
-  const cached=allRecipes.find(x=>x.id===id)||savedList.find(x=>x.id===id);
-  document.getElementById('detail-img').src=cached?(cached.image||cached.imageThumb||''):'';
+/* ── Detail ──────────────────────────────────────────────────── */
+async function openDetail(id) {
+  currentDetailId = id;
+  history.pushState(null, '', `#recipe/${id}`);
+  const ds = document.getElementById('detail-screen');
+  ds.classList.add('active');
+  const cached = allRecipes.find(x=>x.id===id) || savedList.find(x=>x.id===id);
+  document.getElementById('detail-img').src = cached ? (cached.image||cached.imageThumb||'') : '';
   updateFavBtn(!!savedList.find(x=>x.id===id));
-  document.getElementById('detail-scroll').innerHTML='<div class="center-state"><div class="spinner"></div></div>';
+  document.getElementById('detail-scroll').innerHTML = '<div class="center-state"><div class="spinner"></div></div>';
 
-  const r=await fetchDetail(id).catch(()=>null);
-  if(!r||r.error){ document.getElementById('detail-scroll').innerHTML='<p style="padding:20px;color:var(--text2)">Could not load recipe.</p>'; return; }
-  document.getElementById('detail-img').src=r.image||'';
-  let rec=allRecipes.find(x=>x.id===id);
-  if(!rec){ allRecipes.push(r); } else { Object.assign(rec,r); }
+  const r = await fetchDetail(id).catch(() => null);
+  if (!r || r.error) { document.getElementById('detail-scroll').innerHTML = '<p style="padding:20px;color:var(--text2)">Could not load recipe.</p>'; return; }
+  document.getElementById('detail-img').src = r.image || '';
+  let rec = allRecipes.find(x => x.id===id);
+  if (!rec) { allRecipes.push(r); } else { Object.assign(rec, r); }
 
-  const nutrHtml = r.nutrition&&r.nutrition.length
+  const cwk = currentWeekKey();
+  const inWeek = isInWeek(id, cwk);
+
+  const nutrHtml = r.nutrition && r.nutrition.length
     ? `<p class="sec-hd">Nutrition per serving</p><div class="nutrition-row">${r.nutrition.map(n=>`<div class="nutr-chip"><div class="nutr-val">${n.amount}${n.unit}</div><div class="nutr-name">${n.name}</div></div>`).join('')}</div>` : '';
 
-  const ingHtml = (r.ingredients||[]).map(ing=>`
+  const ingHtml = (r.ingredients||[]).map(ing => `
     <div class="ing-card">
       <img src="${ing.image||''}" alt="${ing.name}" loading="lazy" onerror="this.style.opacity='.15'">
       <span class="ing-card-name">${ing.name}</span>
       <span class="ing-card-qty">${fmtQty(ing.amount, ing.unit)}</span>
     </div>`).join('');
 
-  const stepHtml = (r.steps||[]).map((s,i)=>`
+  const stepHtml = (r.steps||[]).map((s, i) => `
     <div class="step-card">
-      <div class="step-img" id="simg-${id}-${i}">
-        <div class="spinner"></div>
-      </div>
+      <div class="step-img" id="simg-${id}-${i}"><div class="spinner"></div></div>
       <div class="step-content">
         <div class="step-label">${STEP_LABELS[i]||'Step '+(i+1)}</div>
         <div class="step-text">${s.instructions}</div>
@@ -738,79 +1053,101 @@ async function openDetail(id, from){
         Watch on YouTube
        </a>` : '';
 
-  document.getElementById('detail-scroll').innerHTML=`
+  document.getElementById('detail-scroll').innerHTML = `
     <div class="fade-in" style="padding-top:10px">
       <p class="detail-title">${r.name}</p>
-      ${r.headline?`<p class="detail-headline">${r.headline}</p>`:''}
+      ${r.headline ? `<p class="detail-headline">${r.headline}</p>` : ''}
       <div class="detail-pills">
-        ${r.cuisine?`<span class="detail-pill green">${r.cuisine}</span>`:''}
-        ${r.difficulty?`<span class="detail-pill">${r.difficulty}</span>`:''}
-        ${r.servings?`<span class="detail-pill">${r.servings} servings</span>`:''}
-        ${r.rating?`<span class="detail-pill">${r.rating} rating</span>`:''}
+        ${r.cuisine   ? `<span class="detail-pill green">${r.cuisine}</span>`      : ''}
+        ${r.difficulty? `<span class="detail-pill">${r.difficulty}</span>`          : ''}
+        ${r.servings  ? `<span class="detail-pill">${r.servings} servings</span>`  : ''}
+        ${r.rating    ? `<span class="detail-pill">${r.rating} rating</span>`      : ''}
       </div>
       <div class="detail-actions">
-        <button class="d-btn d-btn-list" onclick="addToShopFromDetail('${r.id}')">Add to Shopping List</button>
+        <button class="d-btn d-btn-week${inWeek?' in-week':''}" id="detail-week-btn" onclick="toggleDetailWeek('${r.id}')">
+          ${inWeek ? '✓ In This Week' : 'Add to This Week'}
+        </button>
       </div>
-      ${r.description?`<p class="detail-desc">${r.description}</p>`:''}
+      ${r.description ? `<p class="detail-desc">${r.description}</p>` : ''}
       ${ytBtn}
       ${nutrHtml}
-      ${r.allergens&&r.allergens.length?`<p class="sec-hd">Allergens</p><div class="allergen-row">${r.allergens.map(a=>`<span class="allergen-chip">${a}</span>`).join('')}</div>`:''}
-      ${ingHtml?`<p class="sec-hd">Ingredients</p><div class="ing-grid">${ingHtml}</div>`:''}
-      ${stepHtml?`<p class="sec-hd">How to cook</p><div class="steps-list">${stepHtml}</div>`:''}
+      ${r.allergens&&r.allergens.length ? `<p class="sec-hd">Allergens</p><div class="allergen-row">${r.allergens.map(a=>`<span class="allergen-chip">${a}</span>`).join('')}</div>` : ''}
+      ${ingHtml ? `<p class="sec-hd">Ingredients</p><div class="ing-grid">${ingHtml}</div>` : ''}
+      ${stepHtml ? `<p class="sec-hd">How to cook</p><div class="steps-list">${stepHtml}</div>` : ''}
     </div>`;
 
-  // Load step images as base64
-  (r.steps||[]).forEach((s,i)=>{
-    const wrap=document.getElementById(`simg-${id}-${i}`); if(!wrap) return;
+  // Load step images
+  (r.steps||[]).forEach((s, i) => {
+    const wrap = document.getElementById(`simg-${id}-${i}`); if (!wrap) return;
     const src = s.image || r.image || '';
-    if(!src){ wrap.style.display='none'; return; }
-    getImg(src).then(dataUrl=>{
-      if(!wrap.isConnected) return;
-      wrap.innerHTML=`<img src="${dataUrl||src}" alt="Step ${i+1}"><div class="step-img-overlay"></div><div class="step-num-badge">${i+1}</div>`;
+    if (!src) { wrap.style.display='none'; return; }
+    getImg(src).then(dataUrl => {
+      if (!wrap.isConnected) return;
+      wrap.innerHTML = `<img src="${dataUrl||src}" alt="Step ${i+1}"><div class="step-img-overlay"></div><div class="step-num-badge">${i+1}</div>`;
     });
   });
 
-  // Load ingredient images as base64
-  (r.ingredients||[]).forEach((ing,i)=>{
-    if(!ing.image) return;
-    const el=document.querySelectorAll('.ing-card img')[i]; if(!el) return;
-    getImg(ing.image).then(d=>{ if(d&&el.isConnected) el.src=d; });
+  // Load ingredient images
+  (r.ingredients||[]).forEach((ing, i) => {
+    if (!ing.image) return;
+    const el = document.querySelectorAll('.ing-card img')[i]; if (!el) return;
+    getImg(ing.image).then(d => { if (d && el.isConnected) el.src = d; });
   });
 }
 
-function updateFavBtn(isSaved){
-  const btn=document.getElementById('detail-fav');
-  btn.className='detail-fav'+(isSaved?' saved':'');
-}
-function closeDetail(){
-  document.getElementById('detail-screen').style.display='none';
-}
-function toggleSaveFromDetail(){
-  const id=currentDetailId; if(!id) return;
-  const r=allRecipes.find(x=>x.id===id)||savedList.find(x=>x.id===id); if(!r) return;
-  const idx=savedList.findIndex(x=>x.id===id);
-  if(idx>=0){savedList.splice(idx,1);updateFavBtn(false);toast('Removed from saved');}
-  else{savedList.push(r);updateFavBtn(true);toast('Saved to collection');}
-  persist(); renderSaved();
+function toggleDetailWeek(id) {
+  const cwk = currentWeekKey();
+  const r = allRecipes.find(x => x.id===id) || savedList.find(x => x.id===id);
+  if (!r) return;
+  const inWeek = isInWeek(id, cwk);
+  if (inWeek) {
+    removeFromWeek(id, cwk);
+    const btn = document.getElementById('detail-week-btn');
+    if (btn) { btn.textContent = 'Add to This Week'; btn.classList.remove('in-week'); }
+    toast('Removed from This Week');
+  } else {
+    addToWeek(r);
+    const btn = document.getElementById('detail-week-btn');
+    if (btn) { btn.textContent = '✓ In This Week'; btn.classList.add('in-week'); }
+    toast('Added to This Week');
+  }
+  if (currentTab === 'week') renderWeekTab();
 }
 
-/* ── Week ── */
-
-/* ── Saved ── */
-function renderSaved(){
-  document.getElementById('saved-count').textContent=`${savedList.length} recipe${savedList.length!==1?'s':''}`;
-  const el=document.getElementById('saved-list');
-  if(!savedList.length){el.innerHTML=empty('No saved recipes','Swipe right or tap the heart on any recipe.');return;}
-  el.innerHTML=savedList.map((r,i)=>mealRow(r,`removeSaved(${i})`)).join('');
+function updateFavBtn(isSaved) {
+  const btn = document.getElementById('detail-fav');
+  btn.className = 'detail-fav' + (isSaved ? ' saved' : '');
 }
-function removeSaved(i){savedList.splice(i,1);persist();renderSaved();}
 
-function mealRow(r,delFn){
+function closeDetail() {
+  history.back();
+}
+
+function toggleSaveFromDetail() {
+  const id = currentDetailId; if (!id) return;
+  const r = allRecipes.find(x=>x.id===id) || savedList.find(x=>x.id===id); if (!r) return;
+  const idx = savedList.findIndex(x => x.id===id);
+  if (idx>=0) { savedList.splice(idx,1); updateFavBtn(false); toast('Removed from saved'); }
+  else        { savedList.push(r); updateFavBtn(true); toast('Saved to collection'); }
+  persist();
+  if (currentTab === 'me') renderSaved();
+}
+
+/* ── Saved (Me tab) ──────────────────────────────────────────── */
+function renderSaved() {
+  const el = document.getElementById('me-saved-list');
+  if (!savedList.length) { el.innerHTML = empty('No saved recipes', 'Swipe right or tap the heart on any recipe.'); return; }
+  el.innerHTML = savedList.map((r, i) => mealRow(r, `removeSaved(${i})`)).join('');
+}
+
+function removeSaved(i) { savedList.splice(i, 1); persist(); renderSaved(); }
+
+function mealRow(r, delFn) {
   return `<div class="meal-row" onclick="openDetail('${r.id}')">
     <img class="meal-thumb" src="${r.imageThumb||r.image||''}" alt="${r.name}" onerror="this.style.display='none'">
     <div class="meal-info">
       <p class="meal-name">${r.name}</p>
-      <p class="meal-sub">${r.day?r.day+' &middot; ':''}${r.cuisine}${r.totalTime?' &middot; '+r.totalTime:''}</p>
+      <p class="meal-sub">${r.cuisine||''}${r.totalTime?' &middot; '+r.totalTime:''}</p>
     </div>
     <button class="meal-del" onclick="event.stopPropagation();${delFn}">
       <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -818,145 +1155,403 @@ function mealRow(r,delFn){
   </div>`;
 }
 
-/* ── Shopping ── */
-function addToShopFromDetail(id){
-  const r=allRecipes.find(x=>x.id===id); if(!r||!r.ingredients) return;
-  let added=0;
-  r.ingredients.forEach(ing=>{
-    if(!shopItems.find(x=>x.name.toLowerCase()===ing.name.toLowerCase()&&x.recipe===r.name)){
-      shopItems.push({name:ing.name,qty:`${ing.amount||''} ${ing.unit||''}`.trim(),recipe:r.name,recipeId:id,checked:false,id:`${Date.now()}-${Math.random()}`});
-      added++;
-    }
-  });
-  persist(); toast(`${added} ingredient${added!==1?'s':''} added`); renderShop();
+/* ── This Week tab ───────────────────────────────────────────── */
+function renderWeekHeader() {
+  const cwk = currentWeekKey();
+  const past = isPastWeek(viewingWeekKey);
+  const maxFuture = weekKeyOffset(cwk, 2);
+
+  document.getElementById('week-label-text').textContent = weekLabel(viewingWeekKey);
+  document.getElementById('week-range-text').textContent = weekRange(viewingWeekKey);
+  document.getElementById('week-prev-btn').disabled = false;
+  document.getElementById('week-next-btn').disabled = viewingWeekKey >= maxFuture;
+  document.getElementById('week-add-btn').style.visibility = past ? 'hidden' : 'visible';
 }
-async function renderShop(){
-  const el=document.getElementById('shop-list');
-  const n=shopItems.filter(x=>!x.checked).length;
-  document.getElementById('shop-count').textContent=`${n} item${n!==1?'s':''}`;
-  if(!shopItems.length){el.innerHTML=empty('Shopping list is empty','Add ingredients from any recipe.');return;}
 
-  // Shared ingredient detection
-  const nameCounts={};
-  shopItems.forEach(x=>{ const k=x.name.toLowerCase(); nameCounts[k]=(nameCounts[k]||0)+1; });
-  const sharedNames=new Set(Object.keys(nameCounts).filter(k=>nameCounts[k]>1));
-
-  // Group by meal
-  const byMeal={};
-  shopItems.forEach(item=>{ (byMeal[item.recipe]=byMeal[item.recipe]||[]).push(item); });
-
-  el.innerHTML='';
-  for(const [meal,items] of Object.entries(byMeal)){
-    // Find recipe — by ID if saved, or by name as fallback for old items
-    const recipeId=items[0].recipeId;
-    let rec=recipeId
-      ? allRecipes.find(x=>x.id===recipeId)
-      : allRecipes.find(x=>x.name===meal);
-    const idToFetch=recipeId||rec?.id;
-
-    // Fetch full detail if ingredients not yet loaded
-    if(idToFetch && (!rec||!rec.ingredients)){
-      const detail=await fetchDetail(idToFetch).catch(()=>null);
-      if(detail&&!detail.error){ if(rec) Object.assign(rec,detail); else{ allRecipes.push(detail); rec=detail; } }
-    }
-
-    const section=document.createElement('div');
-    section.className='shop-section';
-    section.innerHTML=`
-      <div class="shop-sec-title" style="cursor:pointer" onclick="${rec?.id?`openDetail('${rec.id}')`:''}">${meal}${rec?.id?' <span style="font-size:10px;opacity:.5">↗</span>':''}</div>
-      <div class="ing-grid">${items.map(item=>{
-        const ing=rec?.ingredients?.find(x=>x.name.toLowerCase()===item.name.toLowerCase());
-        const isShared=sharedNames.has(item.name.toLowerCase());
-        return `<div class="ing-card${isShared?' shared':''}${item.checked?' done':''}" onclick="toggleShop('${item.id}')">
-          ${ing?.image?`<img src="${ing.image}" alt="${item.name}" loading="lazy" onerror="this.style.opacity='.15'">`:'<div style="width:52px;height:52px;background:var(--card2);border-radius:8px;margin-bottom:6px"></div>'}
-          <span class="ing-card-name">${item.name}</span>
-          <span class="ing-card-qty">${ing?.amount||ing?.unit ? fmtQty(ing.amount,ing.unit) : item.qty||''}</span>
-          <div class="ing-card-check${item.checked?' checked':''}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-        </div>`;
-      }).join('')}</div>`;
-    el.appendChild(section);
+function renderWeekTab() {
+  renderWeekHeader();
+  if (weekMode === 'plan') {
+    document.getElementById('week-plan-view').style.display = 'flex';
+    document.getElementById('week-shop-view').style.display = 'none';
+    renderWeekPlan();
+  } else {
+    document.getElementById('week-plan-view').style.display = 'none';
+    document.getElementById('week-shop-view').style.display = 'flex';
+    renderWeekShop();
   }
 }
-function toggleShop(id){const it=shopItems.find(x=>x.id===id);if(it){it.checked=!it.checked;persist();renderShop();}}
-function checkAllShop(){shopItems.forEach(x=>x.checked=true);persist();renderShop();}
-function clearChecked(){shopItems=shopItems.filter(x=>!x.checked);persist();renderShop();}
 
-/* ── Filter ── */
-async function filterBy(el){
-  document.querySelectorAll('.fpill').forEach(p=>p.classList.remove('active'));
+function setWeekMode(mode) {
+  weekMode = mode;
+  document.getElementById('week-mode-plan').classList.toggle('active', mode==='plan');
+  document.getElementById('week-mode-shop').classList.toggle('active', mode==='shop');
+  renderWeekTab();
+}
+
+function changeWeek(delta) {
+  viewingWeekKey = weekKeyOffset(viewingWeekKey, delta);
+  renderWeekTab();
+}
+
+function renderWeekPlan() {
+  const plan = getWeekPlan(viewingWeekKey);
+  const past = isPastWeek(viewingWeekKey);
+  const cwk  = currentWeekKey();
+
+  // Reuse banner for past weeks with meals
+  const banner = document.getElementById('week-reuse-banner');
+  banner.style.display = (past && plan.length > 0) ? 'flex' : 'none';
+
+  const el = document.getElementById('week-plan-body');
+  if (!plan.length) {
+    el.innerHTML = empty('No meals planned', past ? 'No meals were planned this week.' : 'Tap ➕ to add meals to your plan.');
+    return;
+  }
+
+  el.innerHTML = plan.map((r, i) => `
+    <div class="meal-row" onclick="openDetail('${r.id}')">
+      <img class="meal-thumb" src="${r.image||''}" alt="${r.name}" onerror="this.style.display='none'">
+      <div class="meal-info">
+        <p class="meal-name">${r.name}</p>
+        <p class="meal-sub">${r.cuisine||''}</p>
+      </div>
+      <button class="meal-del" onclick="event.stopPropagation();removeWeekMeal('${r.id}')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function removeWeekMeal(id) {
+  removeFromWeek(id, viewingWeekKey);
+  renderWeekTab();
+}
+
+function reusePastWeek() {
+  const plan = getWeekPlan(viewingWeekKey);
+  const cwk  = currentWeekKey();
+  const current = getWeekPlan(cwk);
+  let added = 0;
+  plan.forEach(r => {
+    if (!current.find(x => x.id===r.id)) { current.push(r); added++; }
+  });
+  saveWeekPlan(cwk, current);
+  toast(`${added} meal${added!==1?'s':''} added to This Week`);
+}
+
+async function renderWeekShop() {
+  const el = document.getElementById('week-shop-body');
+  const past = isPastWeek(viewingWeekKey);
+
+  if (past) {
+    el.innerHTML = '<div class="center-state"><p class="state-title">Past weeks are read-only</p><p class="state-sub">You can still view what was planned.</p></div>';
+    return;
+  }
+
+  const plan = getWeekPlan(viewingWeekKey);
+  if (!plan.length) {
+    el.innerHTML = empty('No meals in plan', 'Add meals to your plan first.');
+    return;
+  }
+
+  el.innerHTML = '<div class="center-state"><div class="spinner"></div></div>';
+
+  const checked = getShopChecked(viewingWeekKey);
+
+  // Collect all ingredients across plan recipes
+  const allIngs = []; // [{recipeId, recipeName, recipeObj, ing}]
+  for (const planItem of plan) {
+    let rec = allRecipes.find(x => x.id===planItem.id);
+    if (!rec || !rec.ingredients) {
+      const detail = await fetchDetail(planItem.id).catch(() => null);
+      if (detail && !detail.error) {
+        if (rec) Object.assign(rec, detail);
+        else { allRecipes.push(detail); rec = detail; }
+      }
+    }
+    if (rec && rec.ingredients) {
+      rec.ingredients.forEach(ing => {
+        allIngs.push({ recipeId: planItem.id, recipeName: planItem.name, rec, ing });
+      });
+    }
+  }
+
+  // Shared ingredient detection
+  const nameCounts = {};
+  allIngs.forEach(x => { const k = x.ing.name.toLowerCase(); nameCounts[k] = (nameCounts[k]||0) + 1; });
+  const sharedNames = new Set(Object.keys(nameCounts).filter(k => nameCounts[k] > 1));
+
+  el.innerHTML = '';
+
+  // Group by recipe
+  const byRecipe = {};
+  allIngs.forEach(x => { (byRecipe[x.recipeId] = byRecipe[x.recipeId] || { name: x.recipeName, rec: x.rec, ings: [] }).ings.push(x.ing); });
+
+  for (const [recipeId, group] of Object.entries(byRecipe)) {
+    const section = document.createElement('div');
+    section.className = 'shop-section';
+
+    const ingsHtml = group.ings.map(ing => {
+      const ck = `${recipeId}___${ing.name}`;
+      const isDone = !!checked[ck];
+      if (hideChecked && isDone) return '';
+      const isShared = sharedNames.has(ing.name.toLowerCase());
+      return `<div class="ing-card${isShared?' shared':''}${isDone?' done':''}" onclick="toggleWeekShopItem('${recipeId}','${ing.name.replace(/'/g,"\\'")}')">
+        ${ing.image ? `<img src="${ing.image}" alt="${ing.name}" loading="lazy" onerror="this.style.opacity='.15'">` : '<div style="width:52px;height:52px;background:var(--card2);border-radius:8px;margin-bottom:6px"></div>'}
+        <span class="ing-card-name">${ing.name}</span>
+        <span class="ing-card-qty">${fmtQty(ing.amount, ing.unit)}</span>
+        <div class="ing-card-check${isDone?' checked':''}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>`;
+    }).join('');
+
+    section.innerHTML = `
+      <div class="shop-sec-title" style="cursor:pointer" onclick="openDetail('${recipeId}')">
+        ${group.name} <span style="font-size:10px;opacity:.5">↗</span>
+      </div>
+      <div class="ing-grid">${ingsHtml}</div>`;
+    el.appendChild(section);
+  }
+
+  // Load ingredient images
+  allIngs.forEach(({ ing }) => {
+    if (!ing.image) return;
+    document.querySelectorAll('.ing-card img').forEach(img => {
+      if (img.alt === ing.name && !img.dataset.loaded) {
+        img.dataset.loaded = '1';
+        getImg(ing.image).then(d => { if (d && img.isConnected) img.src = d; });
+      }
+    });
+  });
+}
+
+function toggleWeekShopItem(recipeId, ingName) {
+  const key = viewingWeekKey;
+  const checked = getShopChecked(key);
+  const ck = `${recipeId}___${ingName}`;
+  if (checked[ck]) delete checked[ck]; else checked[ck] = true;
+  saveShopChecked(key, checked);
+  renderWeekShop();
+}
+
+function toggleHideChecked() {
+  hideChecked = !hideChecked;
+  document.getElementById('hide-checked-btn').classList.toggle('active', hideChecked);
+  renderWeekShop();
+}
+
+/* ── Recipe Picker ───────────────────────────────────────────── */
+function openPicker() {
+  const cwk = currentWeekKey();
+  const lbl = viewingWeekKey === cwk ? 'This Week' : 'Next Week';
+  document.getElementById('picker-title').textContent = `Add to ${lbl}`;
+  document.getElementById('picker-search').value = '';
+  pickerSearchVal = '';
+  document.getElementById('picker-backdrop').classList.add('open');
+  document.getElementById('picker-sheet').classList.add('open');
+  renderPickerList();
+  setTimeout(() => document.getElementById('picker-search').focus(), 350);
+}
+
+function closePicker() {
+  document.getElementById('picker-backdrop').classList.remove('open');
+  document.getElementById('picker-sheet').classList.remove('open');
+}
+
+function onPickerSearch(val) {
+  pickerSearchVal = val;
+  renderPickerList();
+}
+
+function filterPickerRecipes(q) {
+  const lq = (q||'').toLowerCase();
+  const terms = lq.split(/\s+/).filter(Boolean);
+  if (!terms.length) return allRecipes;
+  return allRecipes.filter(r => {
+    const haystack = [
+      r.name||'',
+      r.cuisine||'',
+      ...(r.tags||[]),
+      ...(r.ingredients||[]).map(i => i.name||''),
+    ].join(' ').toLowerCase();
+    return terms.every(t => haystack.includes(t));
+  });
+}
+
+function renderPickerList() {
+  const list = document.getElementById('picker-list');
+  const filtered = filterPickerRecipes(pickerSearchVal);
+  if (!filtered.length) {
+    list.innerHTML = empty('No recipes found', 'Try a different search.');
+    return;
+  }
+  list.innerHTML = filtered.map(r => {
+    const inWeek = isInWeek(r.id, viewingWeekKey);
+    return `<div class="picker-item${inWeek?' in-week':''}" onclick="togglePickerItem('${r.id}')">
+      <img class="picker-item-img" src="${r.imageThumb||r.image||''}" alt="${r.name}" loading="lazy">
+      <div class="picker-item-info">
+        <p class="picker-item-name">${r.name}</p>
+        <p class="picker-item-meta">${r.cuisine||''}</p>
+      </div>
+      <div class="picker-check">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePickerItem(id) {
+  const inWeek = isInWeek(id, viewingWeekKey);
+  const r = allRecipes.find(x => x.id===id);
+  if (!r) return;
+  if (inWeek) {
+    removeFromWeek(id, viewingWeekKey);
+    toast(`Removed from ${weekLabel(viewingWeekKey)}`);
+  } else {
+    addToWeek(r);
+    toast(`Added to ${weekLabel(viewingWeekKey)}`);
+  }
+  renderPickerList();
+  if (currentTab === 'week') renderWeekTab();
+}
+
+/* ── Filter ──────────────────────────────────────────────────── */
+async function filterBy(el) {
+  document.querySelectorAll('.fpill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
-  currentQ=el.dataset.q||'';
+  currentQ = el.dataset.q || '';
   filterRecipes(currentQ);
 }
 
-/* ── Search ── */
-function toggleSearch(){
-  const bar=document.getElementById('search-bar');
-  searchActive=!searchActive;
-  bar.style.display=searchActive?'block':'none';
-  if(searchActive) document.getElementById('search-input').focus();
+/* ── Search ──────────────────────────────────────────────────── */
+function toggleSearch() {
+  const bar = document.getElementById('search-bar');
+  searchActive = !searchActive;
+  bar.style.display = searchActive ? 'block' : 'none';
+  if (searchActive) document.getElementById('search-input').focus();
   else clearSearch();
 }
-function onSearch(val){
-  document.getElementById('search-clear').style.display=val?'block':'none';
+
+function onSearch(val) {
+  document.getElementById('search-clear').style.display = val ? 'block' : 'none';
   clearTimeout(searchTimeout);
-  if(!val.trim()){filterRecipes(currentQ);return;}
-  clearTimeout(searchTimeout);
-  searchTimeout=setTimeout(()=>filterRecipes(val),350);
+  if (!val.trim()) { filterRecipes(currentQ); return; }
+  searchTimeout = setTimeout(() => filterRecipes(val), 350);
 }
-function clearSearch(){
-  const inp=document.getElementById('search-input'); if(inp) inp.value='';
-  document.getElementById('search-clear').style.display='none';
+
+function clearSearch() {
+  const inp = document.getElementById('search-input'); if (inp) inp.value = '';
+  document.getElementById('search-clear').style.display = 'none';
   filterRecipes(currentQ);
 }
-function filterRecipes(q){
-  const lq=(q||'').toLowerCase();
-  const terms=lq.split(/\s+/).filter(Boolean);
-  const base = terms.length && lq!=='all'
-    ? allRecipes.filter(r=>{
-        const haystack=[
+
+function filterRecipes(q) {
+  const lq = (q||'').toLowerCase();
+  const terms = lq.split(/\s+/).filter(Boolean);
+  const base = terms.length && lq !== 'all'
+    ? allRecipes.filter(r => {
+        const haystack = [
           r.name||'',
           r.cuisine||'',
           ...(r.tags||[]),
-          ...(r.ingredients||[]).map(i=>i.name||''),
+          ...(r.ingredients||[]).map(i => i.name||''),
         ].join(' ').toLowerCase();
-        return terms.every(t=>haystack.includes(t));
+        return terms.every(t => haystack.includes(t));
       })
     : allRecipes;
-  queue=[...base]; qIdx=0;
-  document.getElementById('count-pill').textContent=`${base.length} recipes`;
-  if(browseMode==='scroll') renderScrollList(); else renderCards();
+  queue = [...base]; qIdx = 0;
+  document.getElementById('count-pill').textContent = `${base.length} recipes`;
+  if (browseMode==='scroll') renderScrollList(); else renderCards();
 }
 
-/* ── Navigation ── */
-function switchTab(name){
-  document.querySelectorAll('.nav-btn').forEach(t=>t.classList.remove('active'));
-  const tabEl=document.getElementById(`tab-${name}`); if(tabEl) tabEl.classList.add('active');
-  document.querySelectorAll('.screen:not(#detail-screen)').forEach(s=>s.classList.remove('active'));
+/* ── Navigation ──────────────────────────────────────────────── */
+function switchTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.nav-btn').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById(`tab-${name}`); if (tabEl) tabEl.classList.add('active');
+  document.querySelectorAll('.screen:not(#detail-screen)').forEach(s => s.classList.remove('active'));
   document.getElementById(`${name}-screen`).classList.add('active');
-  if(name==='saved')    renderSaved();
-  if(name==='shopping') renderShop();
+  history.replaceState(null, '', `#${name}`);
+  if (name === 'week') renderWeekTab();
+  if (name === 'me')   renderSaved();
 }
 
-/* ── Toast ── */
-let toastTimer;
-function toast(msg){
-  const t=document.getElementById('toast'); t.textContent=msg;
-  t.classList.add('show'); clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+/* ── Hash / URL routing ──────────────────────────────────────── */
+function handleHashChange() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#recipe/')) {
+    const id = hash.slice(8);
+    if (id && id !== currentDetailId) {
+      // Open detail without pushing state again (popstate already happened)
+      currentDetailId = id;
+      const ds = document.getElementById('detail-screen');
+      ds.classList.add('active');
+      const cached = allRecipes.find(x=>x.id===id) || savedList.find(x=>x.id===id);
+      document.getElementById('detail-img').src = cached ? (cached.image||cached.imageThumb||'') : '';
+      updateFavBtn(!!savedList.find(x=>x.id===id));
+      document.getElementById('detail-scroll').innerHTML = '<div class="center-state"><div class="spinner"></div></div>';
+      fetchDetail(id).then(r => {
+        if (!r || r.error) { document.getElementById('detail-scroll').innerHTML = '<p style="padding:20px;color:var(--text2)">Could not load recipe.</p>'; return; }
+        document.getElementById('detail-img').src = r.image || '';
+        let rec = allRecipes.find(x=>x.id===id);
+        if (!rec) { allRecipes.push(r); } else { Object.assign(rec, r); }
+        const cwk = currentWeekKey();
+        const inWeek = isInWeek(id, cwk);
+        const nutrHtml = r.nutrition&&r.nutrition.length ? `<p class="sec-hd">Nutrition per serving</p><div class="nutrition-row">${r.nutrition.map(n=>`<div class="nutr-chip"><div class="nutr-val">${n.amount}${n.unit}</div><div class="nutr-name">${n.name}</div></div>`).join('')}</div>` : '';
+        const ingHtml = (r.ingredients||[]).map(ing=>`<div class="ing-card"><img src="${ing.image||''}" alt="${ing.name}" loading="lazy" onerror="this.style.opacity='.15'"><span class="ing-card-name">${ing.name}</span><span class="ing-card-qty">${fmtQty(ing.amount,ing.unit)}</span></div>`).join('');
+        const stepHtml = (r.steps||[]).map((s,i)=>`<div class="step-card"><div class="step-img" id="simg-${id}-${i}"><div class="spinner"></div></div><div class="step-content"><div class="step-label">${STEP_LABELS[i]||'Step '+(i+1)}</div><div class="step-text">${s.instructions}</div></div></div>`).join('');
+        const ytBtn = r.youtubeLink ? `<a class="yt-btn" href="${r.youtubeLink}" target="_blank"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon fill="white" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>Watch on YouTube</a>` : '';
+        document.getElementById('detail-scroll').innerHTML = `<div class="fade-in" style="padding-top:10px"><p class="detail-title">${r.name}</p>${r.headline?`<p class="detail-headline">${r.headline}</p>`:''}<div class="detail-pills">${r.cuisine?`<span class="detail-pill green">${r.cuisine}</span>`:''} ${r.difficulty?`<span class="detail-pill">${r.difficulty}</span>`:''} ${r.servings?`<span class="detail-pill">${r.servings} servings</span>`:''} ${r.rating?`<span class="detail-pill">${r.rating} rating</span>`:''}</div><div class="detail-actions"><button class="d-btn d-btn-week${inWeek?' in-week':''}" id="detail-week-btn" onclick="toggleDetailWeek('${r.id}')">${inWeek?'✓ In This Week':'Add to This Week'}</button></div>${r.description?`<p class="detail-desc">${r.description}</p>`:''} ${ytBtn} ${nutrHtml} ${r.allergens&&r.allergens.length?`<p class="sec-hd">Allergens</p><div class="allergen-row">${r.allergens.map(a=>`<span class="allergen-chip">${a}</span>`).join('')}</div>`:''} ${ingHtml?`<p class="sec-hd">Ingredients</p><div class="ing-grid">${ingHtml}</div>`:''} ${stepHtml?`<p class="sec-hd">How to cook</p><div class="steps-list">${stepHtml}</div>`:''}</div>`;
+        (r.steps||[]).forEach((s,i)=>{ const wrap=document.getElementById(`simg-${id}-${i}`); if(!wrap)return; const src=s.image||r.image||''; if(!src){wrap.style.display='none';return;} getImg(src).then(dataUrl=>{ if(!wrap.isConnected)return; wrap.innerHTML=`<img src="${dataUrl||src}" alt="Step ${i+1}"><div class="step-img-overlay"></div><div class="step-num-badge">${i+1}</div>`; }); });
+        (r.ingredients||[]).forEach((ing,i)=>{ if(!ing.image)return; const el=document.querySelectorAll('.ing-card img')[i]; if(!el)return; getImg(ing.image).then(d=>{ if(d&&el.isConnected)el.src=d; }); });
+      }).catch(()=>{});
+    }
+  } else {
+    // Close detail if open
+    const ds = document.getElementById('detail-screen');
+    if (ds.classList.contains('active')) {
+      ds.classList.remove('active');
+      currentDetailId = null;
+    }
+    // Set tab from hash
+    const tabFromHash = hash.replace('#','');
+    const validTabs = ['recipes','week','me'];
+    if (validTabs.includes(tabFromHash) && tabFromHash !== currentTab) {
+      switchTab(tabFromHash);
+    }
+  }
 }
-function empty(title,sub){
+
+window.addEventListener('popstate', handleHashChange);
+
+/* ── Toast ───────────────────────────────────────────────────── */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.classList.add('show'); clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function empty(title, sub) {
   return `<div class="center-state"><p class="state-title">${title}</p><p class="state-sub">${sub}</p></div>`;
 }
 
-/* ── Init ── */
-// Restore unit button
-(()=>{ const btn=document.getElementById('seg-units'); btn.textContent=useMetric?'Metric':'US'; btn.classList.toggle('on',useMetric); })();
-// Restore browse mode
-applyBrowseMode();
-loadCuisines();
-loadRecipes('');
-renderSaved(); renderShop();
+/* ── Init ────────────────────────────────────────────────────── */
+(function init() {
+  // Set initial week state
+  viewingWeekKey = currentWeekKey();
+
+  // Restore unit btn
+  syncUnitsUI();
+
+  // Restore browse mode
+  applyBrowseMode();
+
+  // Load cuisines + recipes
+  loadCuisines();
+  loadRecipes('');
+
+  // Handle initial hash
+  handleHashChange();
+})();
 </script>
 </body>
 </html>
