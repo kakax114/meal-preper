@@ -767,9 +767,6 @@ function setUnits(metric) {
 }
 
 function syncUnitsUI() {
-  const btn = document.getElementById('seg-units');
-  btn.textContent = useMetric ? 'Metric' : 'US';
-  btn.classList.toggle('on', useMetric);
   document.getElementById('pref-units-us').classList.toggle('on', !useMetric);
   document.getElementById('pref-units-metric').classList.toggle('on', useMetric);
 }
@@ -792,9 +789,6 @@ function applyBrowseMode() {
   document.getElementById('swipe-area').style.display  = isScroll ? 'none' : '';
   document.getElementById('swipe-hint').style.display  = isScroll ? 'none' : '';
   document.getElementById('scroll-list').classList.toggle('active', isScroll);
-  document.getElementById('seg-layout').classList.toggle('on', isScroll);
-  document.getElementById('seg-layout-swipe').style.display  = isScroll ? 'none'  : 'block';
-  document.getElementById('seg-layout-scroll').style.display = isScroll ? 'block' : 'none';
   document.getElementById('pref-mode-swipe').classList.toggle('on', !isScroll);
   document.getElementById('pref-mode-scroll').classList.toggle('on', isScroll);
   if (isScroll) renderScrollList();
