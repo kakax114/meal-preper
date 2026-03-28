@@ -308,12 +308,6 @@ img { display: block; }
 .week-fab:active { transform: scale(.93); }
 .week-fab svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .week-fab[hidden] { display: none; }
-.week-today-pill {
-  font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
-  background: var(--green); color: #fff; border: none; display: none;
-  margin-top: 4px;
-}
-.week-today-pill.visible { display: inline-block; }
 .week-mode-row { display: flex; gap: 0; padding: 0 16px 12px; }
 .week-mode-btn {
   flex: 1; padding: 8px 0; border: 0.5px solid var(--border); background: var(--bg);
@@ -479,10 +473,9 @@ img { display: block; }
         <button class="week-nav-btn" id="week-prev-btn" onclick="changeWeek(-1)">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div class="week-center">
+        <div class="week-center" id="week-center" onclick="jumpToThisWeek()" style="cursor:default">
           <p class="week-label" id="week-label-text">This Week</p>
           <p class="week-sublabel" id="week-range-text"></p>
-          <button class="week-today-pill" id="week-today-pill" onclick="jumpToThisWeek()">↩ This Week</button>
         </div>
         <button class="week-nav-btn" id="week-next-btn" onclick="changeWeek(1)">
           <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1169,8 +1162,8 @@ function renderWeekHeader() {
   // FAB: show only for current/future weeks in plan mode
   const fab = document.getElementById('week-fab');
   fab.style.display = (!past && weekMode === 'plan') ? 'flex' : 'none';
-  // "This Week" jump pill: show when not on current week
-  document.getElementById('week-today-pill').classList.toggle('visible', !isCurrentWeek);
+  // Make week center tappable only when not on current week
+  document.getElementById('week-center').style.cursor = isCurrentWeek ? 'default' : 'pointer';
 }
 
 function jumpToThisWeek() {
