@@ -911,12 +911,17 @@ function clearSearch(){
 }
 function filterRecipes(q){
   const lq=(q||'').toLowerCase();
-  const base = lq && lq!=='all'
-    ? allRecipes.filter(r=>
-        (r.cuisine||'').toLowerCase().includes(lq)||
-        (r.name||'').toLowerCase().includes(lq)||
-        (r.tags||[]).some(t=>t.toLowerCase().includes(lq))||
-        (r.ingredients||[]).some(i=>(i.name||'').toLowerCase().includes(lq)))
+  const terms=lq.split(/\s+/).filter(Boolean);
+  const base = terms.length && lq!=='all'
+    ? allRecipes.filter(r=>{
+        const haystack=[
+          r.name||'',
+          r.cuisine||'',
+          ...(r.tags||[]),
+          ...(r.ingredients||[]).map(i=>i.name||''),
+        ].join(' ').toLowerCase();
+        return terms.every(t=>haystack.includes(t));
+      })
     : allRecipes;
   queue=[...base]; qIdx=0;
   document.getElementById('count-pill').textContent=`${base.length} recipes`;
