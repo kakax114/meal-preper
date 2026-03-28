@@ -915,7 +915,8 @@ function filterRecipes(q){
     ? allRecipes.filter(r=>
         (r.cuisine||'').toLowerCase().includes(lq)||
         (r.name||'').toLowerCase().includes(lq)||
-        (r.tags||[]).some(t=>t.toLowerCase().includes(lq)))
+        (r.tags||[]).some(t=>t.toLowerCase().includes(lq))||
+        (r.ingredients||[]).some(i=>(i.name||'').toLowerCase().includes(lq)))
     : allRecipes;
   queue=[...base]; qIdx=0;
   document.getElementById('count-pill').textContent=`${base.length} recipes`;
