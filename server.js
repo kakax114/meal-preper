@@ -6,7 +6,7 @@ const fs    = require('fs');
 const path  = require('path');
 const url   = require('url');
 
-const PORT        = 3456;
+const PORT        = process.env.PORT || 3456;
 const API_BASE    = 'https://gw.hellofresh.com/api';
 const IMG_BASE    = 'https://img.hellofresh.com/hellofresh_s3/image/upload';
 const DETAIL_DIR  = path.join(__dirname, 'detail-cache');
@@ -24,7 +24,18 @@ let _featuredExpiry  = 0;
 let _featuredPending = null; // in-flight Promise to avoid stampede
 
 // ── Local detail-cache index (browse without hitting HF API) ───
-let _localIndex = [];
+let _localIndex      = [];
+let _localIndexMtime = 0;   // last rebuild timestamp
+
+function refreshLocalIndex() {
+  if (!fs.existsSync(DETAIL_DIR)) return;
+  const files = fs.readdirSync(DETAIL_DIR).filter(f => f.endsWith('.json'));
+  // Only rebuild if file count changed since last check
+  if (files.length === _localIndex.length + /* approx dedupe buffer */ 0 &&
+      Date.now() - _localIndexMtime < 20_000) return;
+  buildLocalIndex();
+  _localIndexMtime = Date.now();
+}
 
 function buildLocalIndex() {
   if (!fs.existsSync(DETAIL_DIR)) return;
@@ -36,8 +47,9 @@ function buildLocalIndex() {
         id:         d.id,
         name:       d.name,
         headline:   d.headline,
-        image:      d.image,
-        imageThumb: d.image,
+        // Prefer base64 (no internet needed); fall back to CDN URL
+        imageThumb: d.image || d.imageThumb || '',
+        image:      d.image || d.imageThumb || '',
         cuisine:    d.cuisine,
         difficulty: d.difficulty,
         totalTime:  d.totalTime,
@@ -49,10 +61,18 @@ function buildLocalIndex() {
     } catch { return null; }
   }).filter(Boolean);
 
-  // Deduplicate by name — keep last scraped (files sorted by mtime)
+  // Deduplicate by name — keep last scraped
   const seen = new Map();
   for (const r of all) seen.set(r.name.trim().toLowerCase(), r);
-  _localIndex = [...seen.values()];
+  const deduped = [...seen.values()];
+
+  // Shuffle so browse order feels fresh each server start
+  for (let i = deduped.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deduped[i], deduped[j]] = [deduped[j], deduped[i]];
+  }
+
+  _localIndex = deduped;
   console.log(`[local] Loaded ${_localIndex.length} unique recipes from ${all.length} files`);
 }
 
@@ -157,12 +177,25 @@ function normRecipe(r) {
 
 function normDetail(r) {
   const base = normRecipe(r);
+  const description = r.description || r.descriptionMarkdown || '';
+  const youtubeLink = r.videoLink || r.youtubeLink || '';
+  const allergens   = (r.allergens || []).map(a => a.name).filter(Boolean);
 
+  const yieldEntry = (r.yields || []).find(y => y.yields === (r.servingSize || 2))
+                  || (r.yields || [])[0]
+                  || {};
+  const qtyMap = {};
+  (yieldEntry.ingredients || []).forEach(y => {
+    qtyMap[y.id] = {
+      amount: y.amount != null ? String(y.amount) : '',
+      unit:   (y.unit && (y.unit.name || y.unit)) || '',
+    };
+  });
   const ingredients = (r.ingredients || []).map(ing => ({
     id:     ing.id,
     name:   ing.name,
-    amount: ing.amount || '',
-    unit:   (ing.unit && (ing.unit.name || ing.unit)) || '',
+    amount: qtyMap[ing.id]?.amount || '',
+    unit:   qtyMap[ing.id]?.unit   || '',
     image:  imgUrl(ing.imagePath, 200),
   }));
 
@@ -178,7 +211,7 @@ function normDetail(r) {
     unit:   n.unit || '',
   }));
 
-  return { ...base, ingredients, steps, nutrition };
+  return { ...base, description, youtubeLink, allergens, ingredients, steps, nutrition };
 }
 
 function jsonReply(res, status, data) {
@@ -318,8 +351,21 @@ const server = http.createServer(async (req, res) => {
     }
 
 
+    // ── /api/cuisines — unique cuisines from local cache ──────
+    if (pathname === '/api/cuisines') {
+      const cuisines = [...new Set(
+        _localIndex
+          .map(r => r.cuisine)
+          .filter(Boolean)
+          .sort(),
+      )];
+      jsonReply(res, 200, { cuisines });
+      return;
+    }
+
     // ── /api/recipes?cuisine=X&page=N ─────────────────────────
     if (pathname === '/api/recipes') {
+      refreshLocalIndex();
       const cuisine = query.cuisine || '';
       const page    = Math.max(0, parseInt(query.page) || 0);
 
@@ -334,7 +380,8 @@ const server = http.createServer(async (req, res) => {
             (r.tags||[]).some(t => t.toLowerCase().includes(q))
           );
         }
-        const slice = items.slice(page * 20, page * 20 + 20);
+        const all   = query.all === '1';
+        const slice = all ? items : items.slice(page * 20, page * 20 + 20);
         jsonReply(res, 200, { items: slice, total: items.length, page });
         return;
       }

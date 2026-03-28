@@ -166,13 +166,29 @@ function normDetail(r) {
     servings:    r.servingSize || 2,
     rating:      r.averageRating ? r.averageRating.toFixed(1) : null,
     tags:        (r.tags || []).map(t => t.name).slice(0, 6),
-    ingredients: (r.ingredients || []).map(ing => ({
-      id:     ing.id,
-      name:   ing.name,
-      amount: ing.amount || '',
-      unit:   (ing.unit && (ing.unit.name || ing.unit)) || '',
-      image:  imgUrl(ing.imagePath, 200),
-    })),
+    youtubeLink:  r.videoLink || r.youtubeLink || '',
+    description:  r.description || r.descriptionMarkdown || '',
+    allergens:    (r.allergens || []).map(a => a.name).filter(Boolean),
+    ingredients: (() => {
+      // Quantities live in r.yields[], not on the ingredient directly
+      const yieldEntry = (r.yields || []).find(y => y.yields === (r.servingSize || 2))
+                      || (r.yields || [])[0]
+                      || {};
+      const qtyMap = {};
+      (yieldEntry.ingredients || []).forEach(y => {
+        qtyMap[y.id] = {
+          amount: y.amount != null ? String(y.amount) : '',
+          unit:   (y.unit && (y.unit.name || y.unit)) || '',
+        };
+      });
+      return (r.ingredients || []).map(ing => ({
+        id:     ing.id,
+        name:   ing.name,
+        amount: qtyMap[ing.id]?.amount || '',
+        unit:   qtyMap[ing.id]?.unit   || '',
+        image:  imgUrl(ing.imagePath, 200),
+      }));
+    })(),
     steps: (r.steps || []).map((s, i) => ({
       index:        s.index || i + 1,
       instructions: s.instructions || '',
@@ -246,12 +262,19 @@ async function main() {
     process.exit(1);
   }
 
-  const allUrls = [...new Set(
+  const rawUrls = [...new Set(
     fs.readFileSync(urlFilePath, 'utf8')
       .split('\n')
       .map(l => l.trim())
       .filter(l => l.startsWith('https://www.hellofresh.com/recipes/')),
   )];
+
+  // Shuffle to avoid predictable sequential patterns
+  for (let i = rawUrls.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rawUrls[i], rawUrls[j]] = [rawUrls[j], rawUrls[i]];
+  }
+  const allUrls = rawUrls;
 
   // ── 2. Categorise ────────────────────────────────────────────────
   if (!fs.existsSync(DETAIL_DIR)) fs.mkdirSync(DETAIL_DIR, { recursive: true });

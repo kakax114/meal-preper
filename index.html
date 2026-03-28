@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>My Cookbook</title>
+<title>Cookbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
@@ -20,7 +20,8 @@ html[data-theme="dark"] {
   --border: rgba(255,255,255,.08);
   --green-bg: #0D2818;
   --green-light: #14532D;
-  --theme-icon: '☀';
+  --nav-bg: rgba(22,22,24,.45);
+  --nav-border: rgba(255,255,255,.14);
 }
 html[data-theme="light"] {
   --bg: #F6F6F4;
@@ -32,7 +33,8 @@ html[data-theme="light"] {
   --border: rgba(0,0,0,.08);
   --green-bg: #F0FAF3;
   --green-light: #D8F3DC;
-  --theme-icon: '☽';
+  --nav-bg: rgba(248,248,246,.45);
+  --nav-border: rgba(0,0,0,.1);
 }
 :root {
   --green: #2D6A4F;
@@ -55,22 +57,53 @@ img { display: block; }
 #app { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg); }
 
 /* ── Shared header (persistent across all tabs) ─────────────── */
-#shared-header { flex-shrink: 0; background: var(--card); border-bottom: 0.5px solid var(--border); }
+#shared-header { flex-shrink: 0; background: var(--card); border-bottom: 0.5px solid var(--border); padding-bottom: 10px; }
 .topbar-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: calc(14px + env(safe-area-inset-top)) 16px 0;
 }
+.topbar-left { display: flex; align-items: baseline; gap: 7px; }
 .app-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
+#count-pill { font-size: 12px; color: var(--text3); font-weight: 400; }
 .topbar-right { display: flex; align-items: center; gap: 8px; }
-.count-pill { font-size: 12px; font-weight: 500; color: var(--text2); background: var(--bg); padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); }
-.icon-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; line-height: 1; transition: background .15s; }
-.icon-btn:active { background: var(--border); }
+
+/* Segmented control */
+.seg-group { display: flex; background: var(--bg); border: 0.5px solid var(--border); border-radius: 20px; overflow: hidden; height: 34px; }
+.seg-btn { padding: 0 13px; background: none; border: none; border-right: 0.5px solid var(--border); color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background .15s, color .15s; white-space: nowrap; }
+.seg-btn:last-child { border-right: none; }
+.seg-btn:active { background: var(--card2); }
+.seg-btn.on { background: var(--green-bg); color: var(--green-mid); }
+.seg-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Search icon btn (standalone) */
+.icon-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.icon-btn:active { background: var(--card2); }
 .icon-btn svg { width: 16px; height: 16px; stroke: var(--text2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Tabs */
-.tabs { display: flex; padding: 0 4px; }
-.tab { flex: 1; padding: 10px 0 9px; font-size: 13px; font-weight: 500; color: var(--text3); background: none; border: none; border-bottom: 2px solid transparent; transition: all .15s; }
-.tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+/* ── Bottom nav ──────────────────────────────────────────────── */
+#bottom-nav {
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
+  display: flex; gap: 4px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid var(--nav-border);
+  border-radius: 9999px;
+  padding: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.12);
+  z-index: 50;
+}
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 22px; border: none; background: none; border-radius: 9999px;
+  color: var(--text3); font-size: 10px; font-weight: 600; cursor: pointer;
+  transition: all .18s; letter-spacing: .01em; white-space: nowrap;
+}
+.nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-btn.active { background: var(--green); color: #fff; }
+.nav-btn.active svg { stroke: #fff; }
 
 /* Search */
 .search-bar { background: var(--card); padding: 10px 16px 12px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; display: none; }
@@ -99,7 +132,7 @@ img { display: block; }
 #detail-screen.active { display: flex; }
 
 /* ── Swipe area ─────────────────────────────────────────────── */
-.swipe-area { flex: 1; padding: 14px; position: relative; overflow: hidden; }
+.swipe-area { flex: 1; padding: 14px 14px calc(80px + env(safe-area-inset-bottom)) 14px; position: relative; overflow: hidden; }
 .card-stack { position: relative; height: 100%; }
 
 /* ── Recipe card ─────────────────────────────────────────────── */
@@ -170,6 +203,9 @@ img { display: block; }
 .detail-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px calc(90px + env(safe-area-inset-bottom)); }
 .detail-title { font-family: 'Playfair Display', serif; font-size: 23px; font-weight: 700; line-height: 1.2; margin-bottom: 3px; }
 .detail-headline { font-size: 14px; color: var(--text2); margin-bottom: 12px; font-style: italic; }
+.detail-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 18px; }
+.allergen-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
+.allergen-chip { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; background: rgba(220,150,38,.12); color: #fbbf24; border: 0.5px solid rgba(220,150,38,.25); }
 .detail-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .detail-pill { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; background: var(--card2); border: 0.5px solid var(--border); color: var(--text2); }
 .detail-pill.green { background: var(--green-bg); color: var(--green-mid); border-color: var(--green-light); }
@@ -197,7 +233,7 @@ img { display: block; }
 .ing-card { background: var(--card); border-radius: var(--r14); border: 0.5px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 8px 9px; }
 .ing-card img { width: 52px; height: 52px; object-fit: contain; margin-bottom: 6px; background: var(--card2); border-radius: 8px; }
 .ing-card-name { font-size: 11px; font-weight: 500; text-align: center; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.ing-card-qty { font-size: 10px; color: var(--text3); margin-top: 2px; text-align: center; }
+.ing-card-qty { font-size: 10px; color: var(--text2); margin-top: 2px; text-align: center; }
 
 /* Steps */
 .steps-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
@@ -214,7 +250,7 @@ img { display: block; }
 .screen-subheader { padding: 14px 18px 10px; flex-shrink: 0; display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 0.5px solid var(--border); }
 .screen-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
 .screen-sub { font-size: 13px; color: var(--text2); margin-bottom: 1px; }
-.list-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px calc(20px + env(safe-area-inset-bottom)); }
+.list-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px calc(96px + env(safe-area-inset-bottom)); }
 
 .meal-row { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r14); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; border: 0.5px solid var(--border); }
 .meal-row:active { opacity: .85; }
@@ -227,19 +263,18 @@ img { display: block; }
 .meal-del:active svg { stroke: var(--red); }
 
 /* ── Shopping ─────────────────────────────────────────────────── */
+.shop-section { margin-bottom: 28px; }
+.shop-sec-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
 .shop-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
 .shop-btn { flex: 1; padding: 10px; border-radius: var(--r10); border: 0.5px solid var(--border); background: var(--card); color: var(--text); font-size: 13px; font-weight: 500; }
 .shop-btn-clear { background: var(--card2); color: var(--text2); }
-.shop-section { margin-bottom: 18px; }
-.shop-sec-title { font-size: 12px; font-weight: 600; color: var(--green-mid); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-.shop-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; }
-.shop-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .2s; }
-.shop-check.checked { background: var(--green); border-color: var(--green); }
-.shop-check svg { display: none; width: 10px; height: 10px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.shop-check.checked svg { display: block; }
-.shop-text { flex: 1; font-size: 14px; }
-.shop-text.checked { opacity: .38; text-decoration: line-through; }
-.shop-qty { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.ing-card { cursor: pointer; transition: opacity .2s; }
+.ing-card.shared { border-color: #F59E0B; border-width: 2px; }
+.ing-card.done { opacity: .35; }
+.ing-card-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); margin-top: 6px; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+.ing-card-check.checked { background: var(--green); border-color: var(--green); }
+.ing-card-check svg { display: none; width: 9px; height: 9px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ing-card-check.checked svg { display: block; }
 
 /* ── Toast ───────────────────────────────────────────────────── */
 .toast { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--card); color: var(--text); border: 0.5px solid var(--border); padding: 9px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .28s cubic-bezier(.19,1,.22,1); z-index: 9999; white-space: nowrap; box-shadow: var(--shadow); }
@@ -254,6 +289,16 @@ img { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .pop-in { animation: popIn .22s cubic-bezier(.19,1,.22,1); }
 @keyframes popIn { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+
+/* ── Scroll browse mode ────────────────────────────────────── */
+.scroll-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 14px calc(96px + env(safe-area-inset-bottom)); display: none; flex-direction: column; gap: 8px; }
+.scroll-list.active { display: flex; }
+.scroll-recipe { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: var(--r14); border: 0.5px solid var(--border); padding: 10px; cursor: pointer; }
+.scroll-recipe:active { opacity: .85; }
+.scroll-recipe-img { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; background: var(--card2); flex-shrink: 0; }
+.scroll-recipe-info { flex: 1; min-width: 0; }
+.scroll-recipe-name { font-weight: 600; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
+.scroll-recipe-meta { font-size: 11px; color: var(--text2); }
 </style>
 </head>
 <body>
@@ -262,23 +307,26 @@ img { display: block; }
   <!-- SHARED HEADER — always visible except on detail -->
   <div id="shared-header">
     <div class="topbar-row">
-      <span class="app-title">My Cookbook</span>
+      <div class="topbar-left">
+        <span class="app-title">Cookbook</span>
+        <span id="count-pill">Loading...</span>
+      </div>
       <div class="topbar-right">
-        <span class="count-pill" id="count-pill">Loading...</span>
-        <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
-          <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          <svg id="theme-icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
+        <div class="seg-group">
+          <button class="seg-btn" id="seg-theme" onclick="toggleTheme()">
+            <svg id="seg-theme-sun" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg id="seg-theme-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="seg-btn" id="seg-units" onclick="toggleUnits()">US</button>
+          <button class="seg-btn" id="seg-layout" onclick="toggleBrowseMode()">
+            <svg id="seg-layout-swipe" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <svg id="seg-layout-scroll" viewBox="0 0 24 24" style="display:none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
         <button class="icon-btn" id="search-toggle-btn" onclick="toggleSearch()">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
       </div>
-    </div>
-    <div class="tabs">
-      <button class="tab active" id="tab-browse"   onclick="switchTab('browse')">Browse</button>
-      <button class="tab"        id="tab-week"     onclick="switchTab('week')">This Week</button>
-      <button class="tab"        id="tab-saved"    onclick="switchTab('saved')">Saved</button>
-      <button class="tab"        id="tab-shopping" onclick="switchTab('shopping')">Shopping</button>
     </div>
   </div>
 
@@ -291,50 +339,18 @@ img { display: block; }
     </div>
   </div>
 
-  <!-- BROWSE -->
-  <div id="browse-screen" class="screen active">
-    <div class="filter-row">
-      <span class="fpill active" data-q=""              onclick="filterBy(this)">All</span>
-      <span class="fpill"        data-q="British"       onclick="filterBy(this)">British</span>
-      <span class="fpill"        data-q="American"      onclick="filterBy(this)">American</span>
-      <span class="fpill"        data-q="Italian"       onclick="filterBy(this)">Italian</span>
-      <span class="fpill"        data-q="French"        onclick="filterBy(this)">French</span>
-      <span class="fpill"        data-q="Spanish"       onclick="filterBy(this)">Spanish</span>
-      <span class="fpill"        data-q="Portuguese"    onclick="filterBy(this)">Portuguese</span>
-      <span class="fpill"        data-q="Greek"         onclick="filterBy(this)">Greek</span>
-      <span class="fpill"        data-q="Mediterranean" onclick="filterBy(this)">Mediterranean</span>
-      <span class="fpill"        data-q="Turkish"       onclick="filterBy(this)">Turkish</span>
-      <span class="fpill"        data-q="Moroccan"      onclick="filterBy(this)">Moroccan</span>
-      <span class="fpill"        data-q="North African" onclick="filterBy(this)">North African</span>
-      <span class="fpill"        data-q="Middle Eastern" onclick="filterBy(this)">Middle Eastern</span>
-      <span class="fpill"        data-q="Indian"        onclick="filterBy(this)">Indian</span>
-      <span class="fpill"        data-q="Chinese"       onclick="filterBy(this)">Chinese</span>
-      <span class="fpill"        data-q="Japanese"      onclick="filterBy(this)">Japanese</span>
-      <span class="fpill"        data-q="Korean"        onclick="filterBy(this)">Korean</span>
-      <span class="fpill"        data-q="Thai"          onclick="filterBy(this)">Thai</span>
-      <span class="fpill"        data-q="Vietnamese"    onclick="filterBy(this)">Vietnamese</span>
-      <span class="fpill"        data-q="Malaysian"     onclick="filterBy(this)">Malaysian</span>
-      <span class="fpill"        data-q="Asian"         onclick="filterBy(this)">Asian</span>
-      <span class="fpill"        data-q="Mexican"       onclick="filterBy(this)">Mexican</span>
-      <span class="fpill"        data-q="Russian"       onclick="filterBy(this)">Russian</span>
-      <span class="fpill"        data-q="Jamaican"      onclick="filterBy(this)">Jamaican</span>
-      <span class="fpill"        data-q="Canadian"      onclick="filterBy(this)">Canadian</span>
+  <!-- RECIPES -->
+  <div id="recipes-screen" class="screen active">
+    <div class="filter-row" id="filter-row">
+      <span class="fpill active" data-q="" onclick="filterBy(this)">All</span>
     </div>
-    <div class="swipe-area">
+    <div class="swipe-area" id="swipe-area">
       <div class="card-stack" id="card-stack">
         <div class="center-state"><div class="spinner"></div></div>
       </div>
     </div>
     <p class="swipe-hint" id="swipe-hint">Swipe left to skip &nbsp;&middot;&nbsp; swipe right to save</p>
-  </div>
-
-  <!-- THIS WEEK -->
-  <div id="week-screen" class="screen">
-    <div class="screen-subheader">
-      <span class="screen-title">This Week</span>
-      <span class="screen-sub" id="week-count">0 / 7 days</span>
-    </div>
-    <div class="list-body" id="week-list"></div>
+    <div class="scroll-list" id="scroll-list"></div>
   </div>
 
   <!-- SAVED -->
@@ -379,37 +395,118 @@ img { display: block; }
   </div>
 
 </div>
+
+<!-- BOTTOM NAV — outside #app so backdrop-filter works -->
+<nav id="bottom-nav">
+  <button class="nav-btn active" id="tab-recipes" onclick="switchTab('recipes')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Recipes
+  </button>
+  <button class="nav-btn" id="tab-saved" onclick="switchTab('saved')">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Saved
+  </button>
+  <button class="nav-btn" id="tab-shopping" onclick="switchTab('shopping')">
+    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    Shopping
+  </button>
+</nav>
+
 <div class="toast" id="toast"></div>
 
 <script>
 'use strict';
 
-const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const STEP_LABELS = ['Prep','Cook','Simmer','Combine','Season','Finish','Rest','Serve'];
 
 /* ── State ── */
-let allRecipes = [], queue = [], qIdx = 0, currentPage = 0, isLoading = false;
+let allRecipes = [], queue = [], qIdx = 0, isLoading = false;
 let savedList  = load('cb_saved', []);
-let weekMenu   = load('cb_week',  []);
 let shopItems  = load('cb_shop',  []);
-let currentDetailId = null, prevScreen = 'browse', currentQ = '';
+let currentDetailId = null, prevScreen = 'recipes', currentQ = '';
 let searchActive = false, searchTimeout = null;
+let browseMode = localStorage.getItem('cb_browse_mode') || 'swipe'; // 'swipe' | 'scroll'
+let useMetric  = localStorage.getItem('cb_units') === 'metric';
+
+/* ── Unit conversion ── */
+const METRIC = {
+  'oz':{'f':28.35,'u':'g'},'ounce':{'f':28.35,'u':'g'},'ounces':{'f':28.35,'u':'g'},
+  'fl oz':{'f':29.57,'u':'ml'},'fluid ounce':{'f':29.57,'u':'ml'},
+  'cup':{'f':236.6,'u':'ml'},'cups':{'f':236.6,'u':'ml'},
+  'tbsp':{'f':14.79,'u':'ml'},'tablespoon':{'f':14.79,'u':'ml'},'tablespoons':{'f':14.79,'u':'ml'},
+  'tsp':{'f':4.93,'u':'ml'},'teaspoon':{'f':4.93,'u':'ml'},'teaspoons':{'f':4.93,'u':'ml'},
+  'lb':{'f':453.6,'u':'g'},'pound':{'f':453.6,'u':'g'},'pounds':{'f':453.6,'u':'g'},
+  'quart':{'f':946,'u':'ml'},'gallon':{'f':3785,'u':'ml'},
+};
+function fmtQty(amount, unit){
+  const a = String(amount||'').trim(), u = String(unit||'').trim();
+  if(!useMetric || !a || !u) return `${a} ${u}`.trim();
+  const conv = METRIC[u.toLowerCase()];
+  if(!conv) return `${a} ${u}`.trim();
+  const num = parseFloat(a); if(isNaN(num)) return `${a} ${u}`.trim();
+  let val = num * conv.f, ou = conv.u;
+  if(ou==='ml' && val>=1000){ val/=1000; ou='L'; }
+  if(ou==='g'  && val>=1000){ val/=1000; ou='kg'; }
+  const r = val>=100 ? Math.round(val) : val>=10 ? Math.round(val*10)/10 : Math.round(val*100)/100;
+  return `${r} ${ou}`;
+}
+function toggleUnits(){
+  useMetric = !useMetric;
+  localStorage.setItem('cb_units', useMetric ? 'metric' : 'us');
+  const btn = document.getElementById('seg-units');
+  btn.textContent = useMetric ? 'Metric' : 'US';
+  btn.classList.toggle('on', useMetric);
+  if(document.getElementById('detail-screen').style.display==='flex') openDetail(currentDetailId);
+  renderShop();
+}
+
+/* ── Browse mode toggle ── */
+function toggleBrowseMode(){
+  browseMode = browseMode === 'swipe' ? 'scroll' : 'swipe';
+  localStorage.setItem('cb_browse_mode', browseMode);
+  applyBrowseMode();
+}
+function applyBrowseMode(){
+  const isScroll = browseMode === 'scroll';
+  document.getElementById('swipe-area').style.display  = isScroll ? 'none' : '';
+  document.getElementById('swipe-hint').style.display  = isScroll ? 'none' : '';
+  document.getElementById('scroll-list').classList.toggle('active', isScroll);
+  document.getElementById('seg-layout').classList.toggle('on', isScroll);
+  document.getElementById('seg-layout-swipe').style.display  = isScroll ? 'none'  : 'block';
+  document.getElementById('seg-layout-scroll').style.display = isScroll ? 'block' : 'none';
+  if(isScroll) renderScrollList();
+}
+function renderScrollList(){
+  const el = document.getElementById('scroll-list');
+  const items = queue.slice(qIdx); // show remaining unswipped recipes
+  if(!items.length){ el.innerHTML='<div class="center-state"><p class="state-title">All caught up</p></div>'; return; }
+  el.innerHTML = items.map(r => {
+    const isSaved = !!savedList.find(x=>x.id===r.id);
+    return `<div class="scroll-recipe" onclick="openDetail('${r.id}')">
+      <img class="scroll-recipe-img" src="${r.imageThumb||r.image||''}" alt="${r.name}" loading="lazy">
+      <div class="scroll-recipe-info">
+        <p class="scroll-recipe-name">${r.name}</p>
+        <p class="scroll-recipe-meta">${r.cuisine}${r.difficulty?' · '+r.difficulty:''}</p>
+      </div>
+      <button class="card-save-btn${isSaved?' saved':''}" style="position:static;margin:0 0 0 8px" onclick="event.stopPropagation();quickSave('${r.id}',this)">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
 
 /* ── Theme ── */
-(function initTheme(){
-  const saved = localStorage.getItem('cb_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', saved);
-  document.getElementById('theme-icon-sun').style.display  = saved === 'dark' ? 'block' : 'none';
-  document.getElementById('theme-icon-moon').style.display = saved === 'light' ? 'block' : 'none';
-})();
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('seg-theme-sun').style.display  = t === 'dark'  ? 'block' : 'none';
+  document.getElementById('seg-theme-moon').style.display = t === 'light' ? 'block' : 'none';
+}
+(function initTheme(){ applyTheme(localStorage.getItem('cb_theme') || 'dark'); })();
 
 function toggleTheme(){
-  const curr = document.documentElement.getAttribute('data-theme');
-  const next = curr === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   localStorage.setItem('cb_theme', next);
-  document.getElementById('theme-icon-sun').style.display  = next === 'dark' ? 'block' : 'none';
-  document.getElementById('theme-icon-moon').style.display = next === 'light' ? 'block' : 'none';
+  applyTheme(next);
 }
 
 /* ── Persistence ── */
@@ -417,15 +514,14 @@ function load(k,d){ try{ return JSON.parse(localStorage.getItem(k))||d; }catch{ 
 function persist(){
   try{
     localStorage.setItem('cb_saved', JSON.stringify(savedList));
-    localStorage.setItem('cb_week',  JSON.stringify(weekMenu));
     localStorage.setItem('cb_shop',  JSON.stringify(shopItems));
   }catch{}
 }
 
 /* ── API ── */
-async function fetchRecipes(q, page=0){
+async function fetchPage(q, page){
   const params = new URLSearchParams({ page });
-  if(q) params.set('cuisine', q);
+  if(q && q!=='All') params.set('cuisine', q);
   const r = await fetch(`/api/recipes?${params}`);
   return r.json();
 }
@@ -441,24 +537,59 @@ async function getImg(url){
   return d;
 }
 
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr; }
+
+function setPill(loaded, total){
+  const pill = document.getElementById('count-pill');
+  pill.textContent = loaded < total ? `${loaded} / ${total}` : `${loaded} recipes`;
+}
+
+async function loadCuisines(){
+  try{
+    const r = await fetch('/api/cuisines');
+    const d = await r.json();
+    const row = document.getElementById('filter-row');
+    const pills = (d.cuisines||[]).map(c=>`<span class="fpill" data-q="${c}" onclick="filterBy(this)">${c}</span>`).join('');
+    row.innerHTML = `<span class="fpill active" data-q="" onclick="filterBy(this)">All</span>${pills}`;
+  }catch(_){}
+}
+
 /* ── Load recipes ── */
-async function loadRecipes(q='', page=0, append=false){
+async function loadRecipes(q=''){
   if(isLoading) return;
   isLoading = true;
-  if(!append) setStack('<div class="center-state"><div class="spinner"></div></div>');
+  allRecipes = []; queue = []; qIdx = 0;
+  setStack('<div class="center-state"><div class="spinner"></div></div>');
   try{
-    const data = await fetchRecipes(q, page);
-    const items = data.items || [];
-    if(!append){ allRecipes = items; queue = [...items]; qIdx = 0; }
-    else { allRecipes = [...allRecipes, ...items]; queue = [...allRecipes]; }
-    document.getElementById('count-pill').textContent = `${allRecipes.length} recipes`;
-    renderCards();
+    // Load first page — renders cards immediately
+    const first = await fetchPage(q, 0);
+    const total = first.total || 0;
+    allRecipes = first.items || [];
+    shuffle(allRecipes);
+    queue = [...allRecipes];
+    qIdx = 0;
+    setPill(allRecipes.length, total);
+    if(browseMode==='scroll') renderScrollList(); else renderCards();
+    isLoading = false;
+
+    // Stream remaining pages in background, shuffle each batch in
+    const pages = Math.ceil(total / 20);
+    for(let p = 1; p < pages; p++){
+      const data = await fetchPage(q, p);
+      const newItems = shuffle(data.items || []);
+      allRecipes.push(...newItems);
+      queue.push(...newItems);
+      setPill(allRecipes.length, total);
+      if(browseMode==='scroll') renderScrollList();
+    }
+    setPill(allRecipes.length, allRecipes.length);
   }catch(e){
     setStack(`<div class="center-state">
       <p class="state-title">Could not connect</p>
       <p class="state-sub">Make sure the server is running.<br><code style="font-size:11px;background:var(--card2);padding:2px 6px;border-radius:4px">node server.js</code></p>
     </div>`);
-  }finally{ isLoading = false; }
+    isLoading = false;
+  }
 }
 
 /* ── Cards ── */
@@ -497,9 +628,8 @@ function renderCards(){
         <p class="card-title">${r.name}</p>
         ${r.headline?`<p class="card-headline">${r.headline}</p>`:''}
         <div class="card-quick">
-          <div class="qitem"><strong>${r.totalTime||'—'}</strong>Total time</div>
-          <div class="qitem"><strong>${r.difficulty}</strong>Difficulty</div>
-          <div class="qitem"><strong>${r.servings}</strong>Servings</div>
+          <div class="qitem"><strong>${r.difficulty||'—'}</strong>Difficulty</div>
+          <div class="qitem"><strong>${r.servings||'—'}</strong>Servings</div>
         </div>
         <div class="ing-strip"><span class="ing-strip-more">Tap to see full recipe</span></div>
         <div class="card-actions">
@@ -510,7 +640,6 @@ function renderCards(){
     if(pos===0) attachSwipe(card, r.id);
     stack.appendChild(card);
   });
-  if(qIdx+5 >= allRecipes.length && !isLoading){ currentPage++; loadRecipes(currentQ, currentPage, true); }
 }
 
 /* ── Swipe ── */
@@ -527,10 +656,16 @@ function attachSwipe(card, id){
     const p=Math.min(Math.abs(dx)/90,1);
     ss.style.opacity=dx>20?p:0; sk.style.opacity=dx<-20?p:0;
   };
-  const onEnd=()=>{
+  const onEnd=(e)=>{
     if(!dragging) return; dragging=false; card.style.transition='';
-    if(dx>90) saveCard(id); else if(dx<-90) skipCard(id);
-    else{ card.style.transform='';ss.style.opacity=0;sk.style.opacity=0; }
+    if(dx>90) saveCard(id);
+    else if(dx<-90) skipCard(id);
+    else{
+      card.style.transform='';ss.style.opacity=0;sk.style.opacity=0;
+      // Tap (no significant drag) on non-button area → open detail
+      const tgt=e&&(e.changedTouches?e.changedTouches[0].target:e.target);
+      if(!moved && tgt && !tgt.closest('button')) openDetail(id);
+    }
     dx=0;
   };
   card.addEventListener('mousedown',e=>onStart(e.clientX,e.clientY));
@@ -565,7 +700,7 @@ async function openDetail(id, from){
   // Show detail as fixed overlay
   const ds=document.getElementById('detail-screen');
   ds.style.display='flex';
-  const cached=allRecipes.find(x=>x.id===id)||savedList.find(x=>x.id===id)||weekMenu.find(x=>x.id===id);
+  const cached=allRecipes.find(x=>x.id===id)||savedList.find(x=>x.id===id);
   document.getElementById('detail-img').src=cached?(cached.image||cached.imageThumb||''):'';
   updateFavBtn(!!savedList.find(x=>x.id===id));
   document.getElementById('detail-scroll').innerHTML='<div class="center-state"><div class="spinner"></div></div>';
@@ -583,7 +718,7 @@ async function openDetail(id, from){
     <div class="ing-card">
       <img src="${ing.image||''}" alt="${ing.name}" loading="lazy" onerror="this.style.opacity='.15'">
       <span class="ing-card-name">${ing.name}</span>
-      <span class="ing-card-qty">${ing.amount||''} ${ing.unit||''}</span>
+      <span class="ing-card-qty">${fmtQty(ing.amount, ing.unit)}</span>
     </div>`).join('');
 
   const stepHtml = (r.steps||[]).map((s,i)=>`
@@ -609,17 +744,17 @@ async function openDetail(id, from){
       ${r.headline?`<p class="detail-headline">${r.headline}</p>`:''}
       <div class="detail-pills">
         ${r.cuisine?`<span class="detail-pill green">${r.cuisine}</span>`:''}
-        ${r.totalTime?`<span class="detail-pill">${r.totalTime}</span>`:''}
         ${r.difficulty?`<span class="detail-pill">${r.difficulty}</span>`:''}
         ${r.servings?`<span class="detail-pill">${r.servings} servings</span>`:''}
         ${r.rating?`<span class="detail-pill">${r.rating} rating</span>`:''}
       </div>
       <div class="detail-actions">
-        <button class="d-btn d-btn-week" onclick="addToWeek('${r.id}')">Add to Week</button>
         <button class="d-btn d-btn-list" onclick="addToShopFromDetail('${r.id}')">Add to Shopping List</button>
       </div>
+      ${r.description?`<p class="detail-desc">${r.description}</p>`:''}
       ${ytBtn}
       ${nutrHtml}
+      ${r.allergens&&r.allergens.length?`<p class="sec-hd">Allergens</p><div class="allergen-row">${r.allergens.map(a=>`<span class="allergen-chip">${a}</span>`).join('')}</div>`:''}
       ${ingHtml?`<p class="sec-hd">Ingredients</p><div class="ing-grid">${ingHtml}</div>`:''}
       ${stepHtml?`<p class="sec-hd">How to cook</p><div class="steps-list">${stepHtml}</div>`:''}
     </div>`;
@@ -660,21 +795,6 @@ function toggleSaveFromDetail(){
 }
 
 /* ── Week ── */
-function addToWeek(id){
-  const r=allRecipes.find(x=>x.id===id); if(!r) return;
-  if(weekMenu.find(x=>x.id===id)){toast('Already in your week');return;}
-  if(weekMenu.length>=7){toast('Week is full — remove a meal first');return;}
-  weekMenu.push({...r,day:DAYS[weekMenu.length]});
-  persist(); toast('Added to this week');
-  closeDetail(); switchTab('week');
-}
-function renderWeek(){
-  document.getElementById('week-count').textContent=`${weekMenu.length} / 7 days`;
-  const el=document.getElementById('week-list');
-  if(!weekMenu.length){el.innerHTML=empty('No meals planned','Open a recipe and tap "Add to Week".');return;}
-  el.innerHTML=weekMenu.map((r,i)=>mealRow(r,`removeWeek(${i})`)).join('');
-}
-function removeWeek(i){weekMenu.splice(i,1);persist();renderWeek();}
 
 /* ── Saved ── */
 function renderSaved(){
@@ -704,29 +824,58 @@ function addToShopFromDetail(id){
   let added=0;
   r.ingredients.forEach(ing=>{
     if(!shopItems.find(x=>x.name.toLowerCase()===ing.name.toLowerCase()&&x.recipe===r.name)){
-      shopItems.push({name:ing.name,qty:`${ing.amount||''} ${ing.unit||''}`.trim(),recipe:r.name,checked:false,id:`${Date.now()}-${Math.random()}`});
+      shopItems.push({name:ing.name,qty:`${ing.amount||''} ${ing.unit||''}`.trim(),recipe:r.name,recipeId:id,checked:false,id:`${Date.now()}-${Math.random()}`});
       added++;
     }
   });
   persist(); toast(`${added} ingredient${added!==1?'s':''} added`); renderShop();
 }
-function renderShop(){
+async function renderShop(){
   const el=document.getElementById('shop-list');
   const n=shopItems.filter(x=>!x.checked).length;
   document.getElementById('shop-count').textContent=`${n} item${n!==1?'s':''}`;
   if(!shopItems.length){el.innerHTML=empty('Shopping list is empty','Add ingredients from any recipe.');return;}
-  const byR={};
-  shopItems.forEach(i=>{(byR[i.recipe]=byR[i.recipe]||[]).push(i);});
-  el.innerHTML=Object.entries(byR).map(([recipe,items])=>`
-    <div class="shop-section">
-      <div class="shop-sec-title">${recipe}</div>
-      ${items.map(item=>`
-        <div class="shop-item" onclick="toggleShop('${item.id}')">
-          <div class="shop-check${item.checked?' checked':''}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span class="shop-text${item.checked?' checked':''}">${item.name}</span>
-          <span class="shop-qty">${item.qty}</span>
-        </div>`).join('')}
-    </div>`).join('');
+
+  // Shared ingredient detection
+  const nameCounts={};
+  shopItems.forEach(x=>{ const k=x.name.toLowerCase(); nameCounts[k]=(nameCounts[k]||0)+1; });
+  const sharedNames=new Set(Object.keys(nameCounts).filter(k=>nameCounts[k]>1));
+
+  // Group by meal
+  const byMeal={};
+  shopItems.forEach(item=>{ (byMeal[item.recipe]=byMeal[item.recipe]||[]).push(item); });
+
+  el.innerHTML='';
+  for(const [meal,items] of Object.entries(byMeal)){
+    // Find recipe — by ID if saved, or by name as fallback for old items
+    const recipeId=items[0].recipeId;
+    let rec=recipeId
+      ? allRecipes.find(x=>x.id===recipeId)
+      : allRecipes.find(x=>x.name===meal);
+    const idToFetch=recipeId||rec?.id;
+
+    // Fetch full detail if ingredients not yet loaded
+    if(idToFetch && (!rec||!rec.ingredients)){
+      const detail=await fetchDetail(idToFetch).catch(()=>null);
+      if(detail&&!detail.error){ if(rec) Object.assign(rec,detail); else{ allRecipes.push(detail); rec=detail; } }
+    }
+
+    const section=document.createElement('div');
+    section.className='shop-section';
+    section.innerHTML=`
+      <div class="shop-sec-title" style="cursor:pointer" onclick="${rec?.id?`openDetail('${rec.id}')`:''}">${meal}${rec?.id?' <span style="font-size:10px;opacity:.5">↗</span>':''}</div>
+      <div class="ing-grid">${items.map(item=>{
+        const ing=rec?.ingredients?.find(x=>x.name.toLowerCase()===item.name.toLowerCase());
+        const isShared=sharedNames.has(item.name.toLowerCase());
+        return `<div class="ing-card${isShared?' shared':''}${item.checked?' done':''}" onclick="toggleShop('${item.id}')">
+          ${ing?.image?`<img src="${ing.image}" alt="${item.name}" loading="lazy" onerror="this.style.opacity='.15'">`:'<div style="width:52px;height:52px;background:var(--card2);border-radius:8px;margin-bottom:6px"></div>'}
+          <span class="ing-card-name">${item.name}</span>
+          <span class="ing-card-qty">${ing?.amount||ing?.unit ? fmtQty(ing.amount,ing.unit) : item.qty||''}</span>
+          <div class="ing-card-check${item.checked?' checked':''}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>`;
+      }).join('')}</div>`;
+    el.appendChild(section);
+  }
 }
 function toggleShop(id){const it=shopItems.find(x=>x.id===id);if(it){it.checked=!it.checked;persist();renderShop();}}
 function checkAllShop(){shopItems.forEach(x=>x.checked=true);persist();renderShop();}
@@ -736,8 +885,8 @@ function clearChecked(){shopItems=shopItems.filter(x=>!x.checked);persist();rend
 async function filterBy(el){
   document.querySelectorAll('.fpill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
-  currentQ=el.dataset.q||''; currentPage=0;
-  await loadRecipes(currentQ,0,false);
+  currentQ=el.dataset.q||'';
+  filterRecipes(currentQ);
 }
 
 /* ── Search ── */
@@ -751,22 +900,34 @@ function toggleSearch(){
 function onSearch(val){
   document.getElementById('search-clear').style.display=val?'block':'none';
   clearTimeout(searchTimeout);
-  if(!val.trim()){loadRecipes(currentQ,0,false);return;}
-  searchTimeout=setTimeout(()=>loadRecipes(val,0,false),450);
+  if(!val.trim()){filterRecipes(currentQ);return;}
+  clearTimeout(searchTimeout);
+  searchTimeout=setTimeout(()=>filterRecipes(val),350);
 }
 function clearSearch(){
   const inp=document.getElementById('search-input'); if(inp) inp.value='';
   document.getElementById('search-clear').style.display='none';
-  loadRecipes(currentQ,0,false);
+  filterRecipes(currentQ);
+}
+function filterRecipes(q){
+  const lq=(q||'').toLowerCase();
+  const base = lq && lq!=='all'
+    ? allRecipes.filter(r=>
+        (r.cuisine||'').toLowerCase().includes(lq)||
+        (r.name||'').toLowerCase().includes(lq)||
+        (r.tags||[]).some(t=>t.toLowerCase().includes(lq)))
+    : allRecipes;
+  queue=[...base]; qIdx=0;
+  document.getElementById('count-pill').textContent=`${base.length} recipes`;
+  if(browseMode==='scroll') renderScrollList(); else renderCards();
 }
 
 /* ── Navigation ── */
 function switchTab(name){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(t=>t.classList.remove('active'));
   const tabEl=document.getElementById(`tab-${name}`); if(tabEl) tabEl.classList.add('active');
   document.querySelectorAll('.screen:not(#detail-screen)').forEach(s=>s.classList.remove('active'));
   document.getElementById(`${name}-screen`).classList.add('active');
-  if(name==='week')     renderWeek();
   if(name==='saved')    renderSaved();
   if(name==='shopping') renderShop();
 }
@@ -783,8 +944,13 @@ function empty(title,sub){
 }
 
 /* ── Init ── */
-loadRecipes('',0,false);
-renderSaved(); renderWeek(); renderShop();
+// Restore unit button
+(()=>{ const btn=document.getElementById('seg-units'); btn.textContent=useMetric?'Metric':'US'; btn.classList.toggle('on',useMetric); })();
+// Restore browse mode
+applyBrowseMode();
+loadCuisines();
+loadRecipes('');
+renderSaved(); renderShop();
 </script>
 </body>
 </html>

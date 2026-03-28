@@ -1,0 +1,7 @@
+node_modules
+.git
+chrome-extension
+scrape.js
+start.command
+hellofresh-recipe-urls-*.txt
+*.md
