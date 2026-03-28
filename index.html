@@ -790,7 +790,7 @@ function applyBrowseMode() {
   document.getElementById('scroll-list').classList.toggle('active', isScroll);
   document.getElementById('pref-mode-swipe').classList.toggle('on', !isScroll);
   document.getElementById('pref-mode-scroll').classList.toggle('on', isScroll);
-  if (isScroll) renderScrollList();
+  if (isScroll) renderScrollList(); else if (queue.length) renderCards();
 }
 
 /* ── Virtual scroll ──────────────────────────────────────────── */
@@ -1512,6 +1512,8 @@ function filterRecipes(q) {
 
 /* ── Navigation ──────────────────────────────────────────────── */
 function switchTab(name) {
+  // Tapping the active "This Week" tab jumps back to current week
+  if (name === 'week' && currentTab === 'week') { jumpToThisWeek(); return; }
   currentTab = name;
   document.querySelectorAll('.nav-btn').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById(`tab-${name}`); if (tabEl) tabEl.classList.add('active');
