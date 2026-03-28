@@ -1320,7 +1320,8 @@ async function renderWeekShop() {
   const allIngs = []; // [{recipeId, recipeName, recipeObj, ing}]
   for (const planItem of plan) {
     let rec = allRecipes.find(x => x.id===planItem.id);
-    if (!rec || !rec.ingredients) {
+    // !rec.steps means we only have the lightweight index entry (no images/amounts)
+    if (!rec || !rec.steps) {
       const detail = await fetchDetail(planItem.id).catch(() => null);
       if (detail && !detail.error) {
         if (rec) Object.assign(rec, detail);
@@ -1370,16 +1371,6 @@ async function renderWeekShop() {
     el.appendChild(section);
   }
 
-  // Load ingredient images
-  allIngs.forEach(({ ing }) => {
-    if (!ing.image) return;
-    document.querySelectorAll('.ing-card img').forEach(img => {
-      if (img.alt === ing.name && !img.dataset.loaded) {
-        img.dataset.loaded = '1';
-        getImg(ing.image).then(d => { if (d && img.isConnected) img.src = d; });
-      }
-    });
-  });
 }
 
 function toggleWeekShopItem(recipeId, ingName) {
