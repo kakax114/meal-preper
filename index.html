@@ -710,8 +710,8 @@ function prefetchWeekDetails(weekKey) {
   plan.forEach(r => prefetchDetail(r.id));
 }
 
-function addToWeek(recipe) {
-  const key = currentWeekKey();
+function addToWeek(recipe, weekKey) {
+  const key = weekKey || currentWeekKey();
   const plan = getWeekPlan(key);
   if (!plan.find(r => r.id === recipe.id)) {
     plan.push({ id: recipe.id, name: recipe.name, image: recipe.imageThumb || recipe.image || '', cuisine: recipe.cuisine || '' });
@@ -1390,9 +1390,7 @@ function toggleHideChecked() {
 
 /* ── Recipe Picker ───────────────────────────────────────────── */
 function openPicker() {
-  const cwk = currentWeekKey();
-  const lbl = viewingWeekKey === cwk ? 'This Week' : 'Next Week';
-  document.getElementById('picker-title').textContent = `Add to ${lbl}`;
+  document.getElementById('picker-title').textContent = `Add to ${weekLabel(viewingWeekKey)}`;
   document.getElementById('picker-search').value = '';
   pickerSearchVal = '';
   document.getElementById('picker-backdrop').classList.add('open');
@@ -1456,7 +1454,7 @@ function togglePickerItem(id) {
     removeFromWeek(id, viewingWeekKey);
     toast(`Removed from ${weekLabel(viewingWeekKey)}`);
   } else {
-    addToWeek(r);
+    addToWeek(r, viewingWeekKey);
     toast(`Added to ${weekLabel(viewingWeekKey)}`);
   }
   renderPickerList();
