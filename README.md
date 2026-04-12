@@ -50,6 +50,12 @@ Use the Chrome extension in `chrome-extension/` to scrape recipe data directly f
 
 ---
 
+## Live
+
+**https://meal-preper-319921040061.us-central1.run.app**
+
+---
+
 ## Deploy to Google Cloud Run
 
 The app is hosted on Google Cloud Run. To deploy a new version:
@@ -58,6 +64,7 @@ The app is hosted on Google Cloud Run. To deploy a new version:
 gcloud run deploy meal-preper \
   --source . \
   --region us-central1 \
+  --project 319921040061 \
   --allow-unauthenticated
 ```
 
@@ -68,7 +75,7 @@ gcloud run deploy meal-preper \
 gcloud auth login
 
 # Set your project
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project 319921040061
 
 # Enable required APIs
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com
