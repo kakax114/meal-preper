@@ -47,3 +47,42 @@ Or double-click **`start.command`** in Finder.
 ## Scraping new recipes
 
 Use the Chrome extension in `chrome-extension/` to scrape recipe data directly from HelloFresh.
+
+---
+
+## Deploy to Google Cloud Run
+
+The app is hosted on Google Cloud Run. To deploy a new version:
+
+```bash
+gcloud run deploy meal-preper \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated
+```
+
+### First-time setup
+
+```bash
+# Authenticate
+gcloud auth login
+
+# Set your project
+gcloud config set project YOUR_PROJECT_ID
+
+# Enable required APIs
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com
+
+# Deploy
+gcloud run deploy meal-preper \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated
+```
+
+### Docker (local test before deploying)
+
+```bash
+docker build -t meal-preper .
+docker run -p 8080:8080 meal-preper
+```
